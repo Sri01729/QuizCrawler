@@ -2,9 +2,25 @@ let questions = []; // Global variable to hold quiz data
 
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
-
     const toggleConfigBtn = document.getElementById('toggle-config');
     const configWrapper = document.querySelector('.config-wrapper');
+
+    const minimizeBtn = document.getElementById('minimize-btn');
+
+    // Toggle minimize/restore function
+    function toggleMinimize() {
+        if (!container.classList.contains('minimized')) {
+            // Save the current height before minimizing (if not already saved)
+            container.dataset.fullHeight = container.style.height || container.offsetHeight + 'px';
+            container.classList.add('minimized');
+            container.style.height = '60px'; // Set minimized height (adjust as needed)
+        } else {
+            container.classList.remove('minimized');
+            container.style.height = container.dataset.fullHeight || '500px'; // Restore previous height
+        }
+    }
+
+    minimizeBtn.addEventListener('click', toggleMinimize);
 
     toggleConfigBtn.addEventListener('click', function () {
         configWrapper.classList.toggle('collapsed');
@@ -155,7 +171,16 @@ document.addEventListener('DOMContentLoaded', () => {
         questions = [];
         // Remove saved quiz from chrome storage
         chrome.storage.local.remove('lastQuiz', () => {
-            alert('Quiz cleared!');
+            // Optionally, provide user feedback (can be replaced with a styled notification)
+            // alert('Quiz cleared!');
+            // You can replace the alert with a styled message in the quizContainer
+            quizContainer.innerHTML = '<div class="success">Quiz cleared!</div>';
+
+            // You'll need to add CSS for the "success" class to style the message
+            // For example:
+            
         });
     });
+
+
 });

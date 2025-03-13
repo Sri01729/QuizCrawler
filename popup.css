@@ -24,11 +24,11 @@ body {
     color: var(--text);
     font-size: 14px;
     line-height: 1.5;
+    border-radius: var(--border-radius);
 }
 
 #container {
     width: 420px;
-    /* Increased width */
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
@@ -413,3 +413,11 @@ button:active {
     width: 4px;
     background-color: var(--primary);
 }
+
+.success {
+    color: green;
+    padding: 10px;
+    background-color: lightgreen;
+    border: 1px solid green;
+    margin-top: 10px;
+        }

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Quiz Generator",
+  "name": "Quiz Crawler",
   "version": "1.0",
   "permissions": ["activeTab", "storage", "scripting", "clipboardWrite"],
   "action": {
