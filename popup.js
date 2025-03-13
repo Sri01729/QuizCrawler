@@ -80,28 +80,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for the Generate Quiz button
     document.getElementById('generate-btn').addEventListener('click', async () => {
         try {
+            // Display loading animation
+            quizContainer.innerHTML = `
+    <div class="loading-container">
+      <div class="loading-text">Generating Quiz</div>
+      <div class="loading-spinner">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="loading-brain"></div>
+        <div class="loading-brain"></div>
+        <div class="loading-brain"></div>
+        <div class="loading-brain"></div>
+      </div>
+      <div class="loading-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  `;
+
             // Query for the active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
-            // Send a message to the content script to extract page content
+            // Request content extraction from the content script
             const response = await chrome.tabs.sendMessage(tab.id, { action: "extractContent" });
             if (!response || !response.content) throw new Error('Failed to extract page content');
 
-            // Prepare payload for the API call
+            // Prepare payload for API call
             const payload = {
-                content: response.content.substring(0, 12000), // Limit content length
+                content: response.content.substring(0, 12000),
                 difficulty: document.getElementById('difficulty').value,
                 category: document.getElementById('category').value,
                 count: document.getElementById('count').value
             };
 
-            // Set a timeout to avoid waiting indefinitely
+            // Set a timeout for the API request
             const timeout = setTimeout(() => {
                 quizContainer.innerHTML = '<div class="error">Request timed out (30s)</div>';
             }, 30000);
 
-            // Send a message to the background script to generate the quiz
+            // Send message to background script to generate the quiz
             chrome.runtime.sendMessage({ action: "generateQuiz", payload }, (apiResponse) => {
                 clearTimeout(timeout);
                 try {
@@ -118,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!Array.isArray(parsed)) {
                         throw new Error('Invalid question format received');
                     }
-                    // Display the quiz questions
+                    // Display the quiz questions (this function updates the UI accordingly)
                     displayQuiz(parsed);
                 } catch (e) {
                     console.error('Processing Error:', e);
@@ -130,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             quizContainer.innerHTML = `<div class="error">Error: ${e.message}</div>`;
         }
     });
+
 
     // Save button handler (already implemented)
     document.getElementById('save-btn').addEventListener('click', () => {
@@ -178,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // You'll need to add CSS for the "success" class to style the message
             // For example:
-            
+
         });
     });
 
