@@ -3,6 +3,17 @@ let questions = []; // Global variable to hold quiz data
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
 
+    const toggleConfigBtn = document.getElementById('toggle-config');
+    const configWrapper = document.querySelector('.config-wrapper');
+
+    toggleConfigBtn.addEventListener('click', function () {
+        configWrapper.classList.toggle('collapsed');
+        toggleConfigBtn.classList.toggle('collapsed');
+
+        // Save the state to localStorage
+        localStorage.setItem('configCollapsed', configWrapper.classList.contains('collapsed'));
+    });
+
     // Utility function to clean API response by removing markdown code fences
     function cleanApiResponse(response) {
         return response.replace(/```json\s*([\s\S]*?)\s*```/m, '$1').trim();
