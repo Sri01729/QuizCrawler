@@ -1,98 +1,332 @@
-body {
-  width: 400px;
-  min-height: 500px;
+/* Modern CSS Reset */
+* {
   margin: 0;
-  padding: 10px;
-  font-family: Arial, sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+:root {
+  --primary: #7c3aed;
+  --primary-light: #8b5cf6;
+  --primary-dark: #6d28d9;
+  --secondary: #f3f4f6;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --success: #10b981;
+  --danger: #ef4444;
+  --border-radius: 8px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  background-color: #f9fafb;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 #container {
+  width: 420px; /* Increased width */
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin: 0 auto;
   position: relative;
-  resize: both;
-  overflow: auto;
 }
 
 .header {
+  background-color: var(--primary);
+  color: white;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.drag-handle {
-  cursor: move;
-  background: none;
+.header h2 {
+  font-size: 24px; /* Increased font size */
+  font-weight: 600;
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.controls button {
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  font-size: 1.2em;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.controls button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+#close-btn {
+  font-size: 18px;
 }
 
 .config-section {
+  padding: 20px;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
-  margin-bottom: 15px;
+  grid-template-columns: 120px 1fr; /* Fixed width for labels */
+  gap: 16px; /* Increased gap */
+  align-items: center;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.loading {
-    padding: 20px;
-    text-align: center;
-    color: #666;
-    font-style: italic;
+label {
+  font-weight: 500;
+  color: var(--text);
+  font-size: 16px; /* Increased font size */
 }
 
-
-
-.storage-controls {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
+select {
+  padding: 10px 14px; /* Increased padding */
+  border-radius: var(--border-radius);
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: var(--text);
+  font-size: 15px; /* Increased font size */
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 30px;
+  width: 100%;
 }
 
-
-
-.answer {
-  color: #4CAF50;
-  font-weight: bold;
-  margin-top: 10px;
-  padding: 5px;
-  border-top: 1px solid #ddd;
+select:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
-.reveal-answer {
-  margin-top: 5px;
-  background: #4CAF50;
+button {
+  background-color: var(--primary);
   color: white;
   border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
+  padding: 12px 18px; /* Increased padding */
+  border-radius: var(--border-radius);
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Add error styling */
-.error {
-    color: #dc3545;
-    padding: 15px;
-    border: 1px solid #f5c6cb;
-    background: #f8d7da;
-    border-radius: 4px;
+button:hover {
+  background-color: var(--primary-light);
 }
 
-/* Update question styling */
+button:active {
+  transform: translateY(1px);
+  background-color: var(--primary-dark);
+}
+
+#generate-btn {
+  margin: 24px auto; /* Centered with more margin */
+  width: calc(100% - 48px);
+  padding: 14px; /* Increased padding */
+  font-size: 18px; /* Increased font size */
+  font-weight: 600;
+  background-color: var(--primary);
+  display: block;
+}
+
+#quiz-container {
+  padding: 0 24px; /* Increased padding */
+  max-height: 400px; /* Increased max height */
+  overflow-y: auto;
+  margin-bottom: 24px;
+}
+
+/* Styling for generated quiz content */
 .question {
-    margin: 15px 0;
-    padding: 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f9fafb;
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary);
+  position: relative;
+  animation: fadeIn 0.3s ease-out;
 }
 
-/* Add transition effects */
+.question h3 {
+  margin-bottom: 16px;
+  font-size: 18px; /* Increased font size */
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.question-content {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* Answer styling */
+.answer {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f0f9ff; /* Light blue background */
+  border-radius: var(--border-radius);
+  border-left: 4px solid #0ea5e9; /* Blue border */
+  display: none; /* Hidden by default */
+  animation: fadeIn 0.3s ease-out;
+}
+
+.answer.visible {
+  display: block;
+}
+
+.answer-header {
+  font-weight: 600;
+  color: #0369a1;
+  margin-bottom: 8px;
+}
+
+.answer-content {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Show answer button */
+.show-answer-btn {
+  background-color: var(--primary);
+  padding: 10px 16px;
+  font-size: 15px;
+  margin-top: 12px;
+  width: auto;
+  display: inline-block;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 .option {
-    transition: background-color 0.2s ease;
+  padding: 12px 14px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-size: 15px;
 }
 
-.correct {
-    background: #e8f5e9 !important;
-    border-left: 4px solid #4CAF50;
+.option:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
 }
+
+.option.selected {
+  background-color: rgba(124, 58, 237, 0.1);
+  border-color: var(--primary);
+}
+
+.option.correct {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: var(--success);
+}
+
+.option.incorrect {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
+}
+
+.storage-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 20px 24px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+#save-btn {
+  background-color: var(--success);
+}
+
+#save-btn:hover {
+  background-color: #0ca678;
+}
+
+#clear-btn {
+  background-color: var(--danger);
+}
+
+#clear-btn:hover {
+  background-color: #dc2626;
+}
+
+#export-json, #copy-clipboard {
+  background-color: #6b7280;
+}
+
+#export-json:hover, #copy-clipboard:hover {
+  background-color: #4b5563;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+/* Question number indicator */
+.question::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background-color: var(--primary);
+}
+
+/* Responsive adjustments */
+
+
