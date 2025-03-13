@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en">
+
+<head>
+    <title>Quiz Generator</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div id="container">
+        <div class="header">
+            <h2>Quiz Generator</h2>
+            <div class="controls">
+                <button id="drag-handle" class="drag-handle">↔</button>
+                <button id="close-btn">×</button>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <label for="difficulty">Difficulty:</label>
+            <select id="difficulty">
+                <option>Easy</option>
+                <option>Medium</option>
+                <option>Hard</option>
+            </select>
+
+            <label for="category">Category:</label>
+            <select id="category">
+                <option>Coding Examples</option>
+                <option>General</option>
+                <option>Conceptual</option>
+            </select>
+
+            <label for="count">Questions:</label>
+            <select id="count">
+                <option>1-10</option>
+                <option>20-30</option>
+                <option>40-50</option>
+            </select>
+        </div>
+<!-- <button id="test-btn">Test with Sample</button> -->
+        <button id="generate-btn">Generate Quiz</button>
+        <div id="quiz-container"></div>
+        <div class="storage-controls">
+            <button id="save-btn">Save Quiz</button>
+            <button id="export-json">Export JSON</button>
+            <button id="copy-clipboard">Copy</button>
+            <button id="clear-btn">Clear Quiz</button>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

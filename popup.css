@@ -1,0 +1,98 @@
+body {
+  width: 400px;
+  min-height: 500px;
+  margin: 0;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+}
+
+#container {
+  position: relative;
+  resize: both;
+  overflow: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.drag-handle {
+  cursor: move;
+  background: none;
+  border: none;
+  font-size: 1.2em;
+}
+
+.config-section {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.loading {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+
+
+.storage-controls {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+
+
+.answer {
+  color: #4CAF50;
+  font-weight: bold;
+  margin-top: 10px;
+  padding: 5px;
+  border-top: 1px solid #ddd;
+}
+
+.reveal-answer {
+  margin-top: 5px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Add error styling */
+.error {
+    color: #dc3545;
+    padding: 15px;
+    border: 1px solid #f5c6cb;
+    background: #f8d7da;
+    border-radius: 4px;
+}
+
+/* Update question styling */
+.question {
+    margin: 15px 0;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Add transition effects */
+.option {
+    transition: background-color 0.2s ease;
+}
+
+.correct {
+    background: #e8f5e9 !important;
+    border-left: 4px solid #4CAF50;
+}
