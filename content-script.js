@@ -5,7 +5,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const documentClone = document.cloneNode(true);
             const article = new Readability(documentClone).parse();
 
-            if (!article || !article.textContent) {
+            if (!article?.textContent) {
                 const fallbackContent = document.body ? document.body.innerText : "";
                 if (fallbackContent.trim().length === 0) {
                     sendResponse({ error: 'No readable content found' });
