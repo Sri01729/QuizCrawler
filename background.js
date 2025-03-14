@@ -1,4 +1,4 @@
-const OPENAI_API_KEY = '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'; // Replace with your key
+const OPENAI_API_KEY = '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'; // Replace with your key
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "generateQuiz") {

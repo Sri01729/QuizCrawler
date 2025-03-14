@@ -1,10 +1,14 @@
+import process from 'process/browser';
+window.process = process;
+
+
 let questions = []; // Global variable to hold quiz data
 
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
     const toggleConfigBtn = document.getElementById('toggle-config');
     const configWrapper = document.querySelector('.config-wrapper');
-
+    const refreshBtn = document.getElementById('refresh-btn');
     const minimizeBtn = document.getElementById('minimize-btn');
 
     // Toggle minimize/restore function
@@ -20,6 +24,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    refreshBtn.addEventListener('click', async () => {
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab && tab.id) {
+                chrome.tabs.reload(tab.id);
+            } else {
+                console.error('No active tab found.');
+            }
+        } catch (error) {
+            console.error('Error refreshing the page:', error);
+        }
+    });
     minimizeBtn.addEventListener('click', toggleMinimize);
 
     toggleConfigBtn.addEventListener('click', function () {
@@ -39,22 +55,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayQuiz(receivedQuestions) {
         questions = receivedQuestions; // Store globally
         quizContainer.innerHTML = questions.map((q, i) => `
-      <div class="question">
-        <h3>Question ${i + 1}</h3>
-        <p>${q.question}</p>
-        ${q.options ? q.options.map((o, idx) => `
-          <div class="option">${String.fromCharCode(65 + idx)}) ${o}</div>
-        `).join('') : ''}
-        <div class="answer" style="display: none;">Answer: ${q.answer}</div>
-        ${q.answer ? '<button class="reveal-answer">Show Answer</button>' : ''}
-      </div>
-    `).join('');
+  <div class="question">
+    <h3>Question ${i + 1}</h3>
+    <p>${q.question}</p>
+    ${q.options ? q.options.map((o, idx) => `
+      <div class="option">${String.fromCharCode(65 + idx)}) ${o}</div>
+    `).join('') : ''}
+    <div class="answer" style="display: none;">Answer: ${q.answer}</div>
+    ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
+  </div>
+`).join('');
+
 
         // Add functionality for "Show Answer" buttons
-        document.querySelectorAll('.reveal-answer').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.target.previousElementSibling.style.display = 'block';
-                e.target.remove();
+        // document.querySelectorAll('.answer').forEach(button => {
+        //     button.addEventListener('click', (e) => {
+        //         e.target.previousElementSibling.style.display = 'block';
+        //         e.target.remove();
+        //     });
+        // });
+
+        quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
+            button.addEventListener('click', function () {
+                const answerDiv = this.previousElementSibling; // The answer div is right before the button
+                if (answerDiv.style.display === 'none') {
+                    answerDiv.style.display = 'block';
+                    this.textContent = 'Hide Answer';
+                } else {
+                    answerDiv.style.display = 'none';
+                    this.textContent = 'Show Answer';
+                }
             });
         });
 
@@ -160,7 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
             quizHTML: quizContainer.innerHTML
         };
         chrome.storage.local.set({ lastQuiz: quizData });
-        alert('Quiz saved successfully!');
+        // Display a styled message in the quizContainer
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success';
+        successMessage.textContent = 'Quiz saved successfully!';
+        quizContainer.appendChild(successMessage);
+
+        // Remove the message after a few seconds
+        setTimeout(() => {
+            successMessage.remove();
+        }, 3000);
     });
 
     // Export JSON functionality remains unchanged
@@ -182,7 +221,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return text;
         }).join('\n\n');
         navigator.clipboard.writeText(allText);
-        alert('Questions and answers copied to clipboard!');
+        // Display a styled message in the quizContainer
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success';
+        successMessage.textContent = 'Questions and answers copied to clipboard!';
+        quizContainer.appendChild(successMessage);
+
+        // Remove the message after a few seconds
+        setTimeout(() => {
+            successMessage.remove();
+        }, 3000);
     });
 
     // New Clear button functionality: clears the quiz and stored data
@@ -205,5 +253,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-});
 
+});

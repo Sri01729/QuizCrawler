@@ -99,6 +99,13 @@ body {
     color: var(--text);
 }
 
+.toggle-answer {
+  white-space: nowrap; /* Prevent button text from wrapping */
+  padding: 5px 10px; /* Add padding for better appearance */
+  margin-top: 8px; /* Add 4px margin to the top of the button */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
 .toggle-config {
     background: transparent;
     border: none;
@@ -271,6 +278,8 @@ button:active {
     display: none;
     /* Hidden by default */
     animation: fadeIn 0.3s ease-out;
+    word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .answer.visible {
@@ -293,7 +302,7 @@ button:active {
     background-color: var(--primary);
     padding: 10px 16px;
     font-size: 15px;
-    margin-top: 12px;
+    margin-top: 14px;
     width: auto;
     display: inline-block;
 }
