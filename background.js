@@ -8,7 +8,7 @@ ${content}
 Format response as valid JSON array with objects containing:
 {
   "question": "...",
-  "options": ["...", "..."],  // optional for open-ended questions
+  "options": ["...", "..."],  
   "answer": "..."
 }`;
 

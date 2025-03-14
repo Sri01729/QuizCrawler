@@ -59,12 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
     <h3>Question ${i + 1}</h3>
     <p>${q.question}</p>
     ${q.options ? q.options.map((o, idx) => `
-      <div class="option">${String.fromCharCode(65 + idx)}) ${o}</div>
+      <div class="option" data-correct="${o === q.answer}">${String.fromCharCode(65 + idx)}) ${o}</div>
     `).join('') : ''}
     <div class="answer" style="display: none;">Answer: ${q.answer}</div>
     ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
   </div>
 `).join('');
+
+        // Add event listeners to options
+        quizContainer.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function () {
+                const isCorrect = this.getAttribute('data-correct') === 'true';
+                if (isCorrect) {
+                    this.classList.add('correct');
+                } else {
+                    this.classList.add('incorrect');
+                }
+
+                // Remove the class after 2 seconds
+                setTimeout(() => {
+                    this.classList.remove('correct', 'incorrect');
+                }, 2000);
+            });
+        });
 
 
         // Add functionality for "Show Answer" buttons
