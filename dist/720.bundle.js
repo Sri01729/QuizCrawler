@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkquiz_generator_extension=self.webpackChunkquiz_generator_extension||[]).push([[720],{9720:(e,r,t)=>{t.d(r,{createArchitectureServices:()=>n.S});var n=t(9936);t(1750)}}]);

@@ -5,11 +5,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const { content, difficulty, category, count } = request.payload;
         const prompt = `Generate ${count} ${difficulty} level ${category} questions with answers based on:
 ${content}
+Additionally, generate a diagram in Mermaid syntax that illustrates the scenario flow.
 Format response as valid JSON array with objects containing:
 {
+  "type": "scenario",  // Add type field
   "question": "...",
-  "options": ["...", "..."],  
-  "answer": "..."
+  "options": ["...", "..."],  // optional for open-ended questions
+  "answer": "...",
+  "diagram": "..." // Mermaid diagram markup (optional)
 }`;
 
         console.log('API Request:', prompt);

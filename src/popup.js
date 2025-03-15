@@ -1,6 +1,7 @@
 import process from 'process/browser';
-window.process = process;
+import mermaid from 'mermaid';
 
+window.process = process;
 
 let questions = []; // Global variable to hold quiz data
 
@@ -11,13 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('refresh-btn');
     const minimizeBtn = document.getElementById('minimize-btn');
 
-    // Toggle minimize/restore function
+    // Toggle minimize/restore function (assumes a container element with id 'container')
     function toggleMinimize() {
+        const container = document.getElementById('container');
         if (!container.classList.contains('minimized')) {
-            // Save the current height before minimizing (if not already saved)
             container.dataset.fullHeight = container.style.height || container.offsetHeight + 'px';
             container.classList.add('minimized');
-            container.style.height = '60px'; // Set minimized height (adjust as needed)
+            container.style.height = '60px'; // Set minimized height
         } else {
             container.classList.remove('minimized');
             container.style.height = container.dataset.fullHeight || '500px'; // Restore previous height
@@ -41,8 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleConfigBtn.addEventListener('click', function () {
         configWrapper.classList.toggle('collapsed');
         toggleConfigBtn.classList.toggle('collapsed');
-
-        // Save the state to localStorage
         localStorage.setItem('configCollapsed', configWrapper.classList.contains('collapsed'));
     });
 
@@ -53,20 +52,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to display the generated quiz questions
     function displayQuiz(receivedQuestions) {
+        // Read the selected category from the dropdown
+        const selectedCategory = document.getElementById('category').value;
         questions = receivedQuestions; // Store globally
-        quizContainer.innerHTML = questions.map((q, i) => `
-  <div class="question">
-    <h3>Question ${i + 1}</h3>
-    <p>${q.question}</p>
-    ${q.options ? q.options.map((o, idx) => `
-      <div class="option" data-correct="${o === q.answer}">${String.fromCharCode(65 + idx)}) ${o}</div>
-    `).join('') : ''}
-    <div class="answer" style="display: none;">Answer: ${q.answer}</div>
-    ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
-  </div>
-`).join('');
 
-        // Add event listeners to options
+        // If category is "diagram", filter questions to show only those with a diagram field.
+        if (selectedCategory.toLowerCase() === 'diagram') {
+            questions = questions.filter(q => q.diagram);
+        }
+
+        quizContainer.innerHTML = questions.map((q, i) => `
+      <div class="question">
+        <h3>Question ${i + 1}</h3>
+        <p>${q.question}</p>
+        ${q.type === "scenario" ? `
+          <div class="scenario-answer" style="display: none;">Answer: ${q.answer}</div>
+          <div class="scenario-feedback" style="display: none;"></div>
+        ` : q.options ? q.options.map((o, idx) => `
+          <div class="option" data-correct="${o === q.answer}">${String.fromCharCode(65 + idx)}) ${o}</div>
+        `).join('') : ''}
+        <div class="answer" style="display: none;">Answer: ${q.answer}</div>
+        ${q.diagram ? `
+  <div class="diagram" style="display: none;" data-mermaid-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+  <button class="toggle-diagram">Show Diagram</button>
+` : ''}
+
+        ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
+      </div>
+    `).join('');
+
+        // Add event listeners to options (for MCQ questions)
         quizContainer.querySelectorAll('.option').forEach(option => {
             option.addEventListener('click', function () {
                 const isCorrect = this.getAttribute('data-correct') === 'true';
@@ -75,27 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     this.classList.add('incorrect');
                 }
-
-                // Remove the class after 2 seconds
                 setTimeout(() => {
                     this.classList.remove('correct', 'incorrect');
                 }, 2000);
             });
         });
 
-
-        // Add functionality for "Show Answer" buttons
-        // document.querySelectorAll('.answer').forEach(button => {
-        //     button.addEventListener('click', (e) => {
-        //         e.target.previousElementSibling.style.display = 'block';
-        //         e.target.remove();
-        //     });
-        // });
-
+        // Toggle Answer functionality
         quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
             button.addEventListener('click', function () {
-                const answerDiv = this.previousElementSibling; // The answer div is right before the button
-                if (answerDiv.style.display === 'none') {
+                const answerDiv = this.parentElement.querySelector('.answer');
+                if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
                     answerDiv.style.display = 'block';
                     this.textContent = 'Hide Answer';
                 } else {
@@ -104,6 +109,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Toggle Diagram functionality using mermaid.render()
+        // Toggle Diagram functionality using mermaid.render()
+        quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+            button.addEventListener('click', function () {
+                const diagramDiv = this.parentElement.querySelector('.diagram');
+                if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
+                    diagramDiv.style.display = 'block';
+                    diagramDiv.style.minHeight = '100px'; // Ensure there's some height
+                    diagramDiv.style.border = '1px solid red'; // For debugging (remove later)
+                    this.textContent = 'Hide Diagram';
+                    if (typeof mermaid !== 'undefined') {
+                        const rawCode = diagramDiv.getAttribute('data-mermaid-code');
+                        if (!rawCode) {
+                            console.error('No Mermaid code found.');
+                            return;
+                        }
+                        const uniqueId = 'mermaid-svg-' + Date.now();
+                        mermaid.render(uniqueId, rawCode, (svgCode) => {
+                            console.log("Rendered SVG:", svgCode);
+                            diagramDiv.innerHTML = svgCode;
+                        });
+                    }
+                } else {
+                    diagramDiv.style.display = 'none';
+                    this.textContent = 'Show Diagram';
+                }
+            });
+        });
+
 
         // Save quiz to chrome.storage so it can be reloaded later if needed
         chrome.storage.local.set({ lastQuiz: { questions, quizHTML: quizContainer.innerHTML } });
@@ -114,11 +149,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.lastQuiz && data.lastQuiz.quizHTML) {
             quizContainer.innerHTML = data.lastQuiz.quizHTML;
             questions = data.lastQuiz.questions;
-            // Rebind "Show Answer" functionality
-            document.querySelectorAll('.reveal-answer').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.target.previousElementSibling.style.display = 'block';
-                    e.target.remove();
+            // Rebind "toggle-answer" functionality
+            quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
+                button.addEventListener('click', function () {
+                    const answerDiv = this.parentElement.querySelector('.answer');
+                    if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
+                        answerDiv.style.display = 'block';
+                        this.textContent = 'Hide Answer';
+                    } else {
+                        answerDiv.style.display = 'none';
+                        this.textContent = 'Show Answer';
+                    }
+                });
+            });
+            // Rebind "toggle-diagram" functionality if applicable
+            quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+                button.addEventListener('click', function () {
+                    const diagramDiv = this.parentElement.querySelector('.diagram');
+                    if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
+                        diagramDiv.style.display = 'block';
+                        this.textContent = 'Hide Diagram';
+                        if (typeof mermaid !== 'undefined') {
+                            const diagramCode = diagramDiv.textContent;
+                            const uniqueId = 'mermaid-svg-' + Date.now();
+                            mermaid.render(uniqueId, diagramCode, (svgCode) => {
+                                diagramDiv.innerHTML = svgCode;
+                            });
+                        }
+                    } else {
+                        diagramDiv.style.display = 'none';
+                        this.textContent = 'Show Diagram';
+                    }
                 });
             });
         }
@@ -129,32 +190,31 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Display loading animation
             quizContainer.innerHTML = `
-    <div class="loading-container">
-      <div class="loading-text">Generating Quiz</div>
-      <div class="loading-spinner">
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="loading-brain"></div>
-        <div class="loading-brain"></div>
-        <div class="loading-brain"></div>
-        <div class="loading-brain"></div>
-      </div>
-      <div class="loading-dots">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-      </div>
-    </div>
-  `;
+        <div class="loading-container">
+          <div class="loading-text">Generating Quiz</div>
+          <div class="loading-spinner">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+          </div>
+          <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      `;
 
-            // Query for the active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
             // Request content extraction from the content script
             const response = await chrome.tabs.sendMessage(tab.id, { action: "extractContent" });
-            if (!response || !response.content) throw new Error('Failed to extract page content');
+            if (!response?.content) throw new Error('Failed to extract page content');
 
             // Prepare payload for API call
             const payload = {
@@ -164,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 count: document.getElementById('count').value
             };
 
-            // Set a timeout for the API request
             const timeout = setTimeout(() => {
                 quizContainer.innerHTML = '<div class="error">Request timed out (30s)</div>';
             }, 30000);
@@ -176,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!apiResponse) {
                         throw new Error('Empty response from API');
                     }
-                    // Clean and parse the API response
                     const cleanedResponse = cleanApiResponse(apiResponse);
                     const parsed = JSON.parse(cleanedResponse);
 
@@ -186,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!Array.isArray(parsed)) {
                         throw new Error('Invalid question format received');
                     }
-                    // Display the quiz questions (this function updates the UI accordingly)
+                    // Display the quiz questions
                     displayQuiz(parsed);
                 } catch (e) {
                     console.error('Processing Error:', e);
@@ -199,36 +257,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    // Save button handler (already implemented)
+    // Save button handler
     document.getElementById('save-btn').addEventListener('click', () => {
         const quizData = {
             questions: questions,
             quizHTML: quizContainer.innerHTML
         };
         chrome.storage.local.set({ lastQuiz: quizData });
-        // Display a styled message in the quizContainer
         const successMessage = document.createElement('div');
         successMessage.className = 'success';
         successMessage.textContent = 'Quiz saved successfully!';
         quizContainer.appendChild(successMessage);
-
-        // Remove the message after a few seconds
         setTimeout(() => {
             successMessage.remove();
         }, 3000);
     });
 
-    // Export JSON functionality remains unchanged
+    // Export JSON functionality
     document.getElementById('export-json').addEventListener('click', () => {
         const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         chrome.downloads.download({ url, filename: `quiz_${Date.now()}.json` });
     });
 
-    // Updated copy functionality to always include both questions and answers
+    // Copy to clipboard functionality
     document.getElementById('copy-clipboard').addEventListener('click', () => {
-        // Build a text that includes both questions and answers from the stored data
         const allText = questions.map((q, i) => {
             let text = `Question ${i + 1}: ${q.question}\n`;
             if (q.options && q.options.length) {
@@ -238,37 +291,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return text;
         }).join('\n\n');
         navigator.clipboard.writeText(allText);
-        // Display a styled message in the quizContainer
         const successMessage = document.createElement('div');
         successMessage.className = 'success';
         successMessage.textContent = 'Questions and answers copied to clipboard!';
         quizContainer.appendChild(successMessage);
-
-        // Remove the message after a few seconds
         setTimeout(() => {
             successMessage.remove();
         }, 3000);
     });
 
-    // New Clear button functionality: clears the quiz and stored data
+    // Clear quiz functionality
     document.getElementById('clear-btn').addEventListener('click', () => {
-        // Clear the displayed quiz
         quizContainer.innerHTML = '';
-        // Reset the global questions variable
         questions = [];
-        // Remove saved quiz from chrome storage
         chrome.storage.local.remove('lastQuiz', () => {
-            // Optionally, provide user feedback (can be replaced with a styled notification)
-            // alert('Quiz cleared!');
-            // You can replace the alert with a styled message in the quizContainer
             quizContainer.innerHTML = '<div class="success">Quiz cleared!</div>';
-
-            // You'll need to add CSS for the "success" class to style the message
-            // For example:
-
         });
     });
-
-
-
 });

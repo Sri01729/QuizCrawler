@@ -34,10 +34,13 @@
 
                 <label for="category">Category:</label>
                 <select id="category">
-                    <option>Coding Examples</option>
                     <option>General</option>
+                    <option>Coding Examples</option>
+                    <option value="scenario-based">Scenario-Based</option>
                     <option>Conceptual</option>
+                    <option value="diagram">Diagram</option>
                 </select>
+
 
                 <label for="count">Questions:</label>
                 <select id="count">
@@ -62,6 +65,7 @@
             <button id="clear-btn">Clear Quiz</button>
         </div>
     </div>
+    <script src="lib/mermaid.min.js"></script>
     <script src="dist/bundle.js"></script>
     <script src="popup.js"></script>
 </body>

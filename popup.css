@@ -618,3 +618,8 @@ button:active {
     transform: translateY(0);
   }
 }
+
+.diagram {
+  border: 1px solid red; /* for debugging */
+  min-height: 200px;     /* ensure space for the diagram */
+}
