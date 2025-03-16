@@ -4,6 +4,8 @@
 <head>
     <title>Quiz Crawler</title>
     <link rel="stylesheet" href="popup.css">
+    <!-- Load scripts in the correct order -->
+    <script src="lib/mermaid.min.js"></script>
 </head>
 
 <body>
@@ -11,8 +13,8 @@
         <div class="header">
             <h2>Quiz Crawler</h2>
             <div class="controls">
-            <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
-            <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
+                <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
+                <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
             </div>
         </div>
 
@@ -65,8 +67,10 @@
             <button id="clear-btn">Clear Quiz</button>
         </div>
     </div>
-    <script src="lib/mermaid.min.js"></script>
+
+    <!-- Load the bundled code after DOM elements are available -->
     <script src="dist/bundle.js"></script>
+    <!-- Your main popup script should come last -->
     <script src="popup.js"></script>
 </body>
 

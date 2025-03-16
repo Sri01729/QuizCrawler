@@ -3,6 +3,17 @@ import mermaid from 'mermaid';
 
 window.process = process;
 
+// Initialize mermaid with proper configuration
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    securityLevel: 'loose',
+    flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true
+    }
+});
+
 let questions = []; // Global variable to hold quiz data
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('refresh-btn');
     const minimizeBtn = document.getElementById('minimize-btn');
 
-    // Toggle minimize/restore function (assumes a container element with id 'container')
+    // Toggle minimize/restore function
     function toggleMinimize() {
         const container = document.getElementById('container');
         if (!container.classList.contains('minimized')) {
@@ -50,6 +61,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return response.replace(/```json\s*([\s\S]*?)\s*```/m, '$1').trim();
     }
 
+    // Function to safely render mermaid diagrams
+    function renderMermaidDiagram(container, diagramCode) {
+        // Create a unique ID for the diagram
+        const uniqueId = 'mermaid-diagram-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+        try {
+            console.log("Attempting to render diagram with code:", diagramCode);
+            // Try to render the diagram
+            mermaid.render(uniqueId, diagramCode).then(result => {
+                console.log("Render successful:", result);
+                container.innerHTML = result.svg;
+            }).catch(error => {
+                console.error("Mermaid render error:", error);
+                container.innerHTML = `<div class="error">Error rendering diagram: ${error.message}</div>`;
+            });
+        } catch (error) {
+            console.error("Error in mermaid rendering process:", error);
+            container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        }
+    }
+
     // Function to display the generated quiz questions
     function displayQuiz(receivedQuestions) {
         // Read the selected category from the dropdown
@@ -73,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('') : ''}
         <div class="answer" style="display: none;">Answer: ${q.answer}</div>
         ${q.diagram ? `
-  <div class="diagram" style="display: none;" data-mermaid-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+  <div class="diagram" style="display: none;" data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
   <button class="toggle-diagram">Show Diagram</button>
 ` : ''}
 
@@ -110,35 +142,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Toggle Diagram functionality using mermaid.render()
-        // Toggle Diagram functionality using mermaid.render()
+        // Toggle Diagram functionality with improved error handling
         quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
             button.addEventListener('click', function () {
                 const diagramDiv = this.parentElement.querySelector('.diagram');
                 if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
                     diagramDiv.style.display = 'block';
-                    diagramDiv.style.minHeight = '100px'; // Ensure there's some height
-                    diagramDiv.style.border = '1px solid red'; // For debugging (remove later)
+                    diagramDiv.style.minHeight = '200px'; // Ensure there's enough height
                     this.textContent = 'Hide Diagram';
-                    if (typeof mermaid !== 'undefined') {
-                        const rawCode = diagramDiv.getAttribute('data-mermaid-code');
-                        if (!rawCode) {
-                            console.error('No Mermaid code found.');
-                            return;
-                        }
-                        const uniqueId = 'mermaid-svg-' + Date.now();
-                        mermaid.render(uniqueId, rawCode, (svgCode) => {
-                            console.log("Rendered SVG:", svgCode);
-                            diagramDiv.innerHTML = svgCode;
-                        });
+
+                    // Get diagram code from the data attribute
+                    const diagramCode = diagramDiv.getAttribute('data-diagram-code');
+                    if (!diagramCode) {
+                        console.error('No diagram code found');
+                        diagramDiv.innerHTML = '<div class="error">No diagram code found</div>';
+                        return;
                     }
+
+                    // Render the diagram
+                    renderMermaidDiagram(diagramDiv, diagramCode);
                 } else {
                     diagramDiv.style.display = 'none';
                     this.textContent = 'Show Diagram';
                 }
             });
         });
-
 
         // Save quiz to chrome.storage so it can be reloaded later if needed
         chrome.storage.local.set({ lastQuiz: { questions, quizHTML: quizContainer.innerHTML } });
@@ -149,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.lastQuiz && data.lastQuiz.quizHTML) {
             quizContainer.innerHTML = data.lastQuiz.quizHTML;
             questions = data.lastQuiz.questions;
+
             // Rebind "toggle-answer" functionality
             quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
                 button.addEventListener('click', function () {
@@ -162,19 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             });
-            // Rebind "toggle-diagram" functionality if applicable
+
+            // Rebind "toggle-diagram" functionality
             quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
                 button.addEventListener('click', function () {
                     const diagramDiv = this.parentElement.querySelector('.diagram');
                     if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
                         diagramDiv.style.display = 'block';
                         this.textContent = 'Hide Diagram';
-                        if (typeof mermaid !== 'undefined') {
-                            const diagramCode = diagramDiv.textContent;
-                            const uniqueId = 'mermaid-svg-' + Date.now();
-                            mermaid.render(uniqueId, diagramCode, (svgCode) => {
-                                diagramDiv.innerHTML = svgCode;
-                            });
+
+                        // Get diagram code and render it
+                        const diagramCode = diagramDiv.getAttribute('data-diagram-code');
+                        if (diagramCode) {
+                            renderMermaidDiagram(diagramDiv, diagramCode);
                         }
                     } else {
                         diagramDiv.style.display = 'none';

@@ -618,8 +618,44 @@ button:active {
     transform: translateY(0);
   }
 }
-
+/* Diagram container styling */
 .diagram {
-  border: 1px solid red; /* for debugging */
-  min-height: 200px;     /* ensure space for the diagram */
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius);
+  min-height: 200px;
+  padding: 16px;
+  margin-top: 16px;
+  background-color: white;
+  overflow: auto;
+}
+
+/* Toggle diagram button styling */
+.toggle-diagram {
+  background-color: #4b5563;
+  padding: 8px 14px;
+  font-size: 14px;
+  margin-top: 12px;
+  display: inline-block;
+}
+
+.toggle-diagram:hover {
+  background-color: #374151;
+}
+
+/* Error message styling */
+.diagram .error {
+  color: var(--danger);
+  padding: 12px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--danger);
+  margin: 10px 0;
+}
+
+/* SVG styling within diagrams */
+.diagram svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
