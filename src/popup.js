@@ -60,6 +60,16 @@ function formatCodeInAnswer(answer) {
     });
 }
 
+// New: Function to safely compare answers
+function isCorrectAnswer(optionText, answerText) {
+    // Strip ALL HTML tags and normalize whitespace
+    const cleanOption = optionText.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const cleanAnswer = answerText.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    return cleanOption === cleanAnswer;
+}
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
     const toggleConfigBtn = document.getElementById('toggle-config');
@@ -179,24 +189,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         quizContainer.innerHTML = questions.map((q, i) => `
-      <div class="question">
-        <h3>Question ${i + 1}</h3>
-        <p>${q.question}</p>
-        ${q.type === "scenario" ? `
-          <div class="scenario-answer" style="display: none;">Answer: ${q.answer}</div>
-          <div class="scenario-feedback" style="display: none;"></div>
-        ` : q.options ? q.options.map((o, idx) => `
-          <div class="option" data-correct="${o === q.answer}">${String.fromCharCode(65 + idx)}) ${o}</div>
-        `).join('') : ''}
-        <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
-        ${q.diagram ? `
-          <div class="diagram" style="display: none;" data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
-          <button class="toggle-diagram">Show Diagram</button>
-        ` : ''}
-
-        ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
-      </div>
-    `).join('');
+            <div class="question">
+                <h3>Question ${i + 1}</h3>
+                <p>${q.question}</p>
+                ${q.options ? q.options.map((o, idx) => `
+                    <div class="option" data-correct="${isCorrectAnswer(o, q.answer)}">
+    ${String.fromCharCode(65 + idx)}) ${o.replace(/~~~/g, '')} // Remove code fences
+</div>
+                `).join('') : ''}
+                <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
+                ${q.diagram ? `
+                    <div class="diagram" style="display: none;"
+                         data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+                    <button class="toggle-diagram">Show Diagram</button>
+                ` : ''}
+                ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
+            </div>
+        `).join('');
 
         // Apply syntax highlighting to any pre/code blocks that might be in the initial view
         Prism.highlightAllUnder(quizContainer);
@@ -204,15 +213,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add event listeners to options (for MCQ questions)
         quizContainer.querySelectorAll('.option').forEach(option => {
             option.addEventListener('click', function () {
-                const isCorrect = this.getAttribute('data-correct') === 'true';
+                const isCorrect = this.dataset.correct === 'true';
+
+                // Clear previous states
+                this.parentElement.querySelectorAll('.option').forEach(opt => {
+                    opt.classList.remove('correct', 'incorrect', 'dimmed');
+                });
+
                 if (isCorrect) {
                     this.classList.add('correct');
+                    // Dim other options
+                    this.parentElement.querySelectorAll('.option').forEach(opt => {
+                        if (opt !== this) opt.classList.add('dimmed');
+                    });
                 } else {
                     this.classList.add('incorrect');
+                    // Highlight correct answer
+                    this.parentElement.querySelector('.option[data-correct="true"]')
+                        ?.classList.add('correct');
                 }
-                setTimeout(() => {
-                    this.classList.remove('correct', 'incorrect');
-                }, 2000);
             });
         });
         // Toggle Answer functionality

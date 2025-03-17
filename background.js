@@ -39,12 +39,24 @@ Include these category-specific elements:
 
 Example structures:
 1. Scenario-Based:
+For Scenario-Based questions use EXACTLY this format:
 {
   "type": "scenario-based",
-  "question": "In a distributed system, when would you...",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "answer": "Correct option with justification"
+  "question": "Which method is best for...",
+  "options": [
+    "Option 1 text",  // No markdown
+    "Option 2 text",
+    "Option 3 text",
+    "Option 4 text"
+  ],
+  "answer": "Exact matching option text" // Must match one option exactly
+  "diagram": null
 }
+
+Key requirements:
+- Answer must be identical to one option text
+- No markdown in options/answers
+- No explanations in answers for MCQs
 
 2. Mermaid Diagram:
 {

@@ -320,8 +320,10 @@ button:active {
     border: 1px solid #e5e7eb;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: all 0.2s ease;
     font-size: 15px;
+    position: relative;
+    overflow: hidden;
 }
 
 .option:hover {
@@ -329,21 +331,40 @@ button:active {
     border-color: #d1d5db;
 }
 
-.option.selected {
-    background-color: rgba(124, 58, 237, 0.1);
-    border-color: var(--primary);
-}
-
+/* Correct answer styling */
 .option.correct {
-    background-color: rgba(16, 185, 129, 0.1);
-    border-color: var(--success);
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: var(--success) !important;
+    animation: correct-pulse 0.5s ease;
 }
 
+/* Incorrect answer styling */
 .option.incorrect {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-color: var(--danger);
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: var(--danger) !important;
+    animation: incorrect-shake 0.4s ease;
 }
 
+/* Dim other options when correct is selected */
+.option.dimmed {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+}
+
+
+@keyframes correct-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+@keyframes incorrect-shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+}
 .storage-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
