@@ -1,5 +1,15 @@
 import process from 'process/browser';
 import mermaid from 'mermaid';
+// Import a syntax highlighting library
+import Prism from 'prismjs';
+// Import basic language support
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-markup'; // HTML
+import 'prismjs/themes/prism-okaidia.css'; // Import a theme - change as needed
 
 window.process = process;
 
@@ -15,6 +25,40 @@ mermaid.initialize({
 });
 
 let questions = []; // Global variable to hold quiz data
+
+// Helper function to detect language from code snippet
+function detectLanguage(code) {
+    // Simple detection - can be improved
+    if (code.includes('def ') || code.includes('import ') && code.includes(':')) return 'python';
+    if (code.includes('function') || code.includes('const ') || code.includes('let ') || code.includes('var ')) return 'javascript';
+    if (code.includes('class') && code.includes('{') && code.includes('public')) return 'java';
+    if (code.includes('<html') || code.includes('<!DOCTYPE')) return 'markup';
+    if (code.includes('.class') || code.includes('#id') && !code.includes('function')) return 'css';
+    if (code.includes('using System') || code.includes('namespace')) return 'csharp';
+    return 'javascript'; // Default
+}
+
+// Function to format code in answers
+function formatCodeInAnswer(answer) {
+    const codeRegex = /~~~(\w*)\s*([\s\S]*?)~~~/g;
+    return answer.replace(codeRegex, (match, language, code) => {
+        const lang = language || detectLanguage(code);
+
+        try {
+            // Prism.highlightAll is not a function - it highlights all elements on the page
+            // Instead, use Prism.highlight which returns a string
+            const highlighted = Prism.highlight(
+                code,
+                Prism.languages[lang] || Prism.languages.javascript,
+                lang
+            );
+            return `<pre class="language-${lang}"><code class="language-${lang}">${highlighted}</code></pre>`;
+        } catch (e) {
+            console.error('Error highlighting code:', e);
+            return `<pre class="code-block"><code>${code}</code></pre>`;
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
@@ -144,15 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ` : q.options ? q.options.map((o, idx) => `
           <div class="option" data-correct="${o === q.answer}">${String.fromCharCode(65 + idx)}) ${o}</div>
         `).join('') : ''}
-        <div class="answer" style="display: none;">Answer: ${q.answer}</div>
+        <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
         ${q.diagram ? `
-  <div class="diagram" style="display: none;" data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
-  <button class="toggle-diagram">Show Diagram</button>
-` : ''}
+          <div class="diagram" style="display: none;" data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+          <button class="toggle-diagram">Show Diagram</button>
+        ` : ''}
 
         ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
       </div>
     `).join('');
+
+        // Apply syntax highlighting to any pre/code blocks that might be in the initial view
+        Prism.highlightAllUnder(quizContainer);
 
         // Add event listeners to options (for MCQ questions)
         quizContainer.querySelectorAll('.option').forEach(option => {
@@ -168,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 2000);
             });
         });
-
         // Toggle Answer functionality
         quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
             button.addEventListener('click', function () {
@@ -176,13 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
                     answerDiv.style.display = 'block';
                     this.textContent = 'Hide Answer';
+                    // Apply syntax highlighting when answer becomes visible
+                    Prism.highlightAllUnder(answerDiv);
                 } else {
                     answerDiv.style.display = 'none';
                     this.textContent = 'Show Answer';
                 }
             });
         });
-
         // Toggle Diagram functionality with improved error handling
         quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
             button.addEventListener('click', function () {
@@ -226,6 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
                         answerDiv.style.display = 'block';
                         this.textContent = 'Hide Answer';
+                        // Apply syntax highlighting when answer becomes visible
+                        Prism.highlightAllUnder(answerDiv);
                     } else {
                         answerDiv.style.display = 'none';
                         this.textContent = 'Show Answer';
@@ -296,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const timeout = setTimeout(() => {
                 quizContainer.innerHTML = '<div class="error">Request timed out (30s)</div>';
-            }, 30000);
+            }, 50000);
 
             // Send message to background script to generate the quiz
             chrome.runtime.sendMessage({ action: "generateQuiz", payload }, (apiResponse) => {

@@ -742,3 +742,44 @@ button:active {
     border-radius: 4px;
     overflow-x: auto;
 }
+
+/* Add these styles to your popup.css file */
+
+/* Base code block styling */
+pre[class*="language-"] {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 5px;
+  background-color: #272822; /* Matches Prism okaidia theme */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+code[class*="language-"] {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;
+  text-align: left;
+  /* The Prism theme will handle most of the token coloring */
+}
+
+/* Fallback for cases where Prism doesn't apply */
+.code-block {
+  background-color: #272822;
+  color: #f8f8f2;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 480px) {
+  pre[class*="language-"],
+  .code-block {
+    font-size: 12px;
+    padding: 0.5em;
+  }
+}

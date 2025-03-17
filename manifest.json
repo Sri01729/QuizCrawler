@@ -16,6 +16,9 @@
       "js": ["lib/Readability.js", "content-script.js"]
     }
   ],
+  "content_security_policy": {
+  "extension_pages": "script-src 'self'; object-src 'self'"
+},
   "icons": {
     "128": "icons/icon128.png"
   }

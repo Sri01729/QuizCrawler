@@ -3,8 +3,7 @@ const OPENAI_API_KEY = 'sk-proj-AIeMLxsBBGIKgtiFLzBAXVnoCBJdh-r__E81wWThXZLyZ09t
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "generateQuiz") {
         const { content, difficulty, category, count } = request.payload;
-        const prompt = `Generate ${count} ${difficulty} level questions in the "${category}" category based on:
-${content}
+        const prompt = `Generate ${count} ${difficulty} level questions in the "${category}" category based on: ${content}
 
 For each question, follow these category-specific requirements:
 - "General": Open-ended questions about common practices
@@ -24,16 +23,16 @@ Format response as valid JSON array containing objects with:
 
 Include these category-specific elements:
 - Coding Examples Rules:
-1. For code examples: Use "~~~language" instead of backticks
-2. Escape JSON-sensitive chars with §placeholder§
-3. Format answer as:
-
-{{
+1. For code examples: Use "~~~language" syntax to indicate code blocks like "~~~javascript" or "~~~python"
+2. Always specify the language after the ~~~ for proper syntax highlighting
+3. Format code answer as:
+{
   "type": "coding-examples",
   "question": "Write Python code to read a file",
-  "answer": "~~~python\\nwith open(§quot§file.txt§quot§) as f:\\n    print(f.read())~~~",
+  "answer": "To read a file in Python:\\n\\n~~~python\\nwith open('file.txt') as f:\\n    print(f.read())\\n~~~\\n\\nThis code opens the file and reads its content.",
   "diagram": null
-}}
+}
+
 - Scenario-Based: 4 plausible options per question
 - Conceptual: Ask for comparisons/definitions
 - Mermaid Diagram: Include complete diagram in answer
@@ -52,7 +51,7 @@ Example structures:
   "type": "mermaid-diagram",
   "question": "Visualize the workflow for...",
   "answer": "System description",
-  "diagram": "graph TD\n  A-->B"
+  "diagram": "graph TD\\n  A-->B"
 }
 
 Ensure valid JSON syntax and proper escaping. Generate exactly ${count} items.`;

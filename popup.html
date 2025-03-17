@@ -4,19 +4,30 @@
 <head>
     <title>Quiz Crawler</title>
     <link rel="stylesheet" href="popup.css">
+    <!-- Add Prism CSS theme (you can choose different themes) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
     <!-- Load scripts in the correct order -->
     <script src="lib/mermaid.min.js"></script>
+    <!-- Add Prism core and language components -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 </head>
 
 <body>
+    <!-- Rest of your HTML remains unchanged -->
     <div id="container">
         <div class="header">
             <h2>Quiz Crawler</h2>
-        <div class="controls">
-            <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
-            <button id="maximize-btn" class="maximize-btn">&#x26F6;</button>
-            <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
-        </div>
+            <div class="controls">
+                <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
+                <button id="maximize-btn" class="maximize-btn">&#x26F6;</button>
+                <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
+            </div>
         </div>
 
         <div class="config-wrapper">
@@ -44,7 +55,6 @@
                     <option value="diagram">Mermaid Diagram</option>
                 </select>
 
-
                 <label for="count">Questions:</label>
                 <select id="count">
                     <option>1-10</option>
@@ -54,11 +64,8 @@
                 <div class="generate-btn-div">
                     <button id="generate-btn">Generate Quiz</button>
                 </div>
-
             </div>
-
         </div>
-
 
         <div id="quiz-container"></div>
         <div class="storage-controls">
