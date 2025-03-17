@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const configWrapper = document.querySelector('.config-wrapper');
     const refreshBtn = document.getElementById('refresh-btn');
     const minimizeBtn = document.getElementById('minimize-btn');
+    const maximizeBtn = document.getElementById('maximize-btn');
+    maximizeBtn.addEventListener('click', toggleMaximize);
+
 
     // Toggle minimize/restore function
     function toggleMinimize() {
@@ -33,6 +36,44 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             container.classList.remove('minimized');
             container.style.height = container.dataset.fullHeight || '500px'; // Restore previous height
+        }
+    }
+
+    function toggleMaximize() {
+        const container = document.getElementById('container');
+
+        // Store original dimensions using computed styles
+        if (!container.dataset.originalWidth) {
+            const style = getComputedStyle(container);
+            container.dataset.originalWidth = style.width;
+            container.dataset.originalHeight = style.height;
+            container.dataset.originalPosition = style.position;
+            container.dataset.originalTop = style.top;
+            container.dataset.originalLeft = style.left;
+        }
+
+        if (container.classList.contains('maximized')) {
+            // Restore original styles from dataset
+            container.classList.remove('maximized');
+            document.body.classList.remove('body-maximized');
+
+            // Reset to original positioning
+            container.style.position = container.dataset.originalPosition;
+            container.style.top = container.dataset.originalTop;
+            container.style.left = container.dataset.originalLeft;
+            container.style.width = container.dataset.originalWidth;
+            container.style.height = container.dataset.originalHeight;
+        } else {
+            // Maximize using CSS class only
+            container.classList.add('maximized');
+            document.body.classList.add('body-maximized');
+
+            // Clear any conflicting inline styles
+            container.style.position = '';
+            container.style.top = '';
+            container.style.left = '';
+            container.style.width = '';
+            container.style.height = '';
         }
     }
 
