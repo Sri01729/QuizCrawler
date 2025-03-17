@@ -1,8 +1,76 @@
 import process from 'process/browser';
+import mermaid from 'mermaid';
+// Import a syntax highlighting library
+import Prism from 'prismjs';
+// Import basic language support
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-markup'; // HTML
+import 'prismjs/themes/prism-okaidia.css'; // Import a theme - change as needed
+
 window.process = process;
 
+// Initialize mermaid with proper configuration
+mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true, // Better compatibility
+        curve: 'linear'
+    },
+    theme: 'forest',
+    logLevel: 0 // Enable error logging
+});
 
 let questions = []; // Global variable to hold quiz data
+
+// Helper function to detect language from code snippet
+function detectLanguage(code) {
+    // Simple detection - can be improved
+    if (code.includes('def ') || code.includes('import ') && code.includes(':')) return 'python';
+    if (code.includes('function') || code.includes('const ') || code.includes('let ') || code.includes('var ')) return 'javascript';
+    if (code.includes('class') && code.includes('{') && code.includes('public')) return 'java';
+    if (code.includes('<html') || code.includes('<!DOCTYPE')) return 'markup';
+    if (code.includes('.class') || code.includes('#id') && !code.includes('function')) return 'css';
+    if (code.includes('using System') || code.includes('namespace')) return 'csharp';
+    return 'javascript'; // Default
+}
+
+// Function to format code in answers
+function formatCodeInAnswer(answer) {
+    const codeRegex = /~~~(\w*)\s*([\s\S]*?)~~~/g;
+    return answer.replace(codeRegex, (match, language, code) => {
+        const lang = language || detectLanguage(code);
+
+        try {
+            // Prism.highlightAll is not a function - it highlights all elements on the page
+            // Instead, use Prism.highlight which returns a string
+            const highlighted = Prism.highlight(
+                code,
+                Prism.languages[lang] || Prism.languages.javascript,
+                lang
+            );
+            return `<pre class="language-${lang}"><code class="language-${lang}">${highlighted}</code></pre>`;
+        } catch (e) {
+            console.error('Error highlighting code:', e);
+            return `<pre class="code-block"><code>${code}</code></pre>`;
+        }
+    });
+}
+
+// New: Function to safely compare answers
+function isCorrectAnswer(optionText, answerText) {
+    // Strip ALL HTML tags and normalize whitespace
+    const cleanOption = optionText.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const cleanAnswer = answerText.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    return cleanOption === cleanAnswer;
+}
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
@@ -10,17 +78,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const configWrapper = document.querySelector('.config-wrapper');
     const refreshBtn = document.getElementById('refresh-btn');
     const minimizeBtn = document.getElementById('minimize-btn');
+    const maximizeBtn = document.getElementById('maximize-btn');
+    maximizeBtn.addEventListener('click', toggleMaximize);
+
 
     // Toggle minimize/restore function
     function toggleMinimize() {
+        const container = document.getElementById('container');
         if (!container.classList.contains('minimized')) {
-            // Save the current height before minimizing (if not already saved)
             container.dataset.fullHeight = container.style.height || container.offsetHeight + 'px';
             container.classList.add('minimized');
-            container.style.height = '60px'; // Set minimized height (adjust as needed)
+            container.style.height = '60px'; // Set minimized height
         } else {
             container.classList.remove('minimized');
             container.style.height = container.dataset.fullHeight || '500px'; // Restore previous height
+        }
+    }
+
+    function toggleMaximize() {
+        const container = document.getElementById('container');
+
+        // Store original dimensions using computed styles
+        if (!container.dataset.originalWidth) {
+            const style = getComputedStyle(container);
+            container.dataset.originalWidth = style.width;
+            container.dataset.originalHeight = style.height;
+            container.dataset.originalPosition = style.position;
+            container.dataset.originalTop = style.top;
+            container.dataset.originalLeft = style.left;
+        }
+
+        if (container.classList.contains('maximized')) {
+            // Restore original styles from dataset
+            container.classList.remove('maximized');
+            document.body.classList.remove('body-maximized');
+
+            // Reset to original positioning
+            container.style.position = container.dataset.originalPosition;
+            container.style.top = container.dataset.originalTop;
+            container.style.left = container.dataset.originalLeft;
+            container.style.width = container.dataset.originalWidth;
+            container.style.height = container.dataset.originalHeight;
+        } else {
+            // Maximize using CSS class only
+            container.classList.add('maximized');
+            document.body.classList.add('body-maximized');
+
+            // Clear any conflicting inline styles
+            container.style.position = '';
+            container.style.top = '';
+            container.style.left = '';
+            container.style.width = '';
+            container.style.height = '';
         }
     }
 
@@ -41,8 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleConfigBtn.addEventListener('click', function () {
         configWrapper.classList.toggle('collapsed');
         toggleConfigBtn.classList.toggle('collapsed');
-
-        // Save the state to localStorage
         localStorage.setItem('configCollapsed', configWrapper.classList.contains('collapsed'));
     });
 
@@ -51,39 +158,157 @@ document.addEventListener('DOMContentLoaded', () => {
         return response.replace(/```json\s*([\s\S]*?)\s*```/m, '$1').trim();
     }
 
+    // Function to safely render mermaid diagrams
+    // Add these functions at the top of your file
+    function sanitizeMermaidCode(code) {
+        return code
+            // Escape special characters
+            .replace(/\(/g, '&#40;')   // Escape (
+            .replace(/\)/g, '&#41;')   // Escape )
+            .replace(/{/g, '&#123;')    // Escape {
+            .replace(/}/g, '&#125;')    // Escape }
+            // Fix node formatting
+            .replace(/\[([^\]]+)\]/g, '["$1"]') // Wrap labels in quotes
+            // Fix arrow syntax
+            .replace(/--\s?>/g, '-->')  // Ensure proper arrow format
+            .replace(/\s-\s*$/gm, '');   // Remove trailing dashes
+    }
+
+    function validateMermaidSyntax(code) {
+        const errors = [];
+        const lines = code.split('\n');
+
+        lines.forEach((line, index) => {
+            if (/(\w+)\s-$/.test(line)) {
+                errors.push(`Line ${index + 1}: Incomplete arrow syntax`);
+            }
+            if (/\[[^\]]+$/.test(line)) {
+                errors.push(`Line ${index + 1}: Unclosed node bracket`);
+            }
+        });
+
+        return {
+            valid: errors.length === 0,
+            errors
+        };
+    }
+
+    // Update your existing render function
+    async function renderMermaidDiagram(container, diagramCode) {
+        try {
+            const cleanCode = sanitizeMermaidCode(diagramCode);
+            const validation = validateMermaidSyntax(cleanCode);
+
+            if (!validation.valid) {
+                throw new Error(`Diagram validation failed:\n${validation.errors.join('\n')}`);
+            }
+
+            const { svg } = await mermaid.render(
+                `mermaid-${Date.now()}`,
+                cleanCode
+            );
+            container.innerHTML = svg;
+        } catch (error) {
+            console.error('Mermaid render error:', error);
+            container.innerHTML = `
+            <div class="error">
+                <strong>Diagram Error:</strong> ${error.message.split('\n')[0]}
+                <pre>Original Code:\n${diagramCode}\n\nSanitized Code:\n${cleanCode}</pre>
+            </div>
+        `;
+        }
+    }
+
+
+
     // Function to display the generated quiz questions
     function displayQuiz(receivedQuestions) {
+        // Read the selected category from the dropdown
+        const selectedCategory = document.getElementById('category').value;
         questions = receivedQuestions; // Store globally
+
+        // If category is "diagram", filter questions to show only those with a diagram field.
+        if (selectedCategory.toLowerCase() === 'diagram') {
+            questions = questions.filter(q => q.diagram);
+        }
+
         quizContainer.innerHTML = questions.map((q, i) => `
-  <div class="question">
-    <h3>Question ${i + 1}</h3>
-    <p>${q.question}</p>
-    ${q.options ? q.options.map((o, idx) => `
-      <div class="option">${String.fromCharCode(65 + idx)}) ${o}</div>
-    `).join('') : ''}
-    <div class="answer" style="display: none;">Answer: ${q.answer}</div>
-    ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
-  </div>
-`).join('');
+            <div class="question">
+                <h3>Question ${i + 1}</h3>
+                <p>${q.question}</p>
+                ${q.options ? q.options.map((o, idx) => `
+                    <div class="option" data-correct="${isCorrectAnswer(o, q.answer)}">
+    ${String.fromCharCode(65 + idx)}) ${o.replace(/~~~/g, '')}
+</div>
+                `).join('') : ''}
+                <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
+                ${q.diagram ? `
+                    <div class="diagram" style="display: none;"
+                         data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+                    <button class="toggle-diagram">Show Diagram</button>
+                ` : ''}
+                ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
+            </div>
+        `).join('');
 
+        // Apply syntax highlighting to any pre/code blocks that might be in the initial view
+        Prism.highlightAllUnder(quizContainer);
 
-        // Add functionality for "Show Answer" buttons
-        // document.querySelectorAll('.answer').forEach(button => {
-        //     button.addEventListener('click', (e) => {
-        //         e.target.previousElementSibling.style.display = 'block';
-        //         e.target.remove();
-        //     });
-        // });
+        // Add event listeners to options (for MCQ questions)
+        quizContainer.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function () {
+                const isCorrect = this.dataset.correct === 'true';
 
+                // Clear previous states
+                this.parentElement.querySelectorAll('.option').forEach(opt => {
+                    opt.classList.remove('correct', 'incorrect', 'dimmed');
+                });
+
+                if (isCorrect) {
+                    this.classList.add('correct');
+                    // Dim other options
+                    this.parentElement.querySelectorAll('.option').forEach(opt => {
+                        if (opt !== this) opt.classList.add('dimmed');
+                    });
+                } else {
+                    this.classList.add('incorrect');
+                    // Highlight correct answer
+                    this.parentElement.querySelector('.option[data-correct="true"]')
+                        ?.classList.add('correct');
+                }
+            });
+        });
+        // Toggle Answer functionality
         quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
             button.addEventListener('click', function () {
-                const answerDiv = this.previousElementSibling; // The answer div is right before the button
-                if (answerDiv.style.display === 'none') {
+                const answerDiv = this.parentElement.querySelector('.answer');
+                if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
                     answerDiv.style.display = 'block';
                     this.textContent = 'Hide Answer';
+                    // Apply syntax highlighting when answer becomes visible
+                    Prism.highlightAllUnder(answerDiv);
                 } else {
                     answerDiv.style.display = 'none';
                     this.textContent = 'Show Answer';
+                }
+            });
+        });
+        // Toggle Diagram functionality with improved error handling
+        quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+            // In your diagram toggle event listener:
+            button.addEventListener('click', function () {
+                const diagramDiv = this.parentElement.querySelector('.diagram');
+                if (diagramDiv.style.display === 'none') {
+                    diagramDiv.style.display = 'block';
+                    this.textContent = 'Hide Diagram';
+
+                    const rawCode = diagramDiv.dataset.diagramCode;
+                    const diagramCode = sanitizeMermaidCode(rawCode);
+
+                    renderMermaidDiagram(diagramDiv, diagramCode);
+                } else {
+                    diagramDiv.style.display = 'none';
+                    this.textContent = 'Show Diagram';
                 }
             });
         });
@@ -97,11 +322,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.lastQuiz && data.lastQuiz.quizHTML) {
             quizContainer.innerHTML = data.lastQuiz.quizHTML;
             questions = data.lastQuiz.questions;
-            // Rebind "Show Answer" functionality
-            document.querySelectorAll('.reveal-answer').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.target.previousElementSibling.style.display = 'block';
-                    e.target.remove();
+
+            // Rebind "toggle-answer" functionality
+            quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
+                button.addEventListener('click', function () {
+                    const answerDiv = this.parentElement.querySelector('.answer');
+                    if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
+                        answerDiv.style.display = 'block';
+                        this.textContent = 'Hide Answer';
+                        // Apply syntax highlighting when answer becomes visible
+                        Prism.highlightAllUnder(answerDiv);
+                    } else {
+                        answerDiv.style.display = 'none';
+                        this.textContent = 'Show Answer';
+                    }
+                });
+            });
+
+            // Rebind "toggle-diagram" functionality
+            quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+                button.addEventListener('click', function () {
+                    const diagramDiv = this.parentElement.querySelector('.diagram');
+                    if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
+                        diagramDiv.style.display = 'block';
+                        this.textContent = 'Hide Diagram';
+
+                        // Get diagram code and render it
+                        const diagramCode = diagramDiv.getAttribute('data-diagram-code');
+                        if (diagramCode) {
+                            renderMermaidDiagram(diagramDiv, diagramCode);
+                        }
+                    } else {
+                        diagramDiv.style.display = 'none';
+                        this.textContent = 'Show Diagram';
+                    }
                 });
             });
         }
@@ -112,32 +366,31 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Display loading animation
             quizContainer.innerHTML = `
-    <div class="loading-container">
-      <div class="loading-text">Generating Quiz</div>
-      <div class="loading-spinner">
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="loading-brain"></div>
-        <div class="loading-brain"></div>
-        <div class="loading-brain"></div>
-        <div class="loading-brain"></div>
-      </div>
-      <div class="loading-dots">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-      </div>
-    </div>
-  `;
+        <div class="loading-container">
+          <div class="loading-text">Generating Quiz</div>
+          <div class="loading-spinner">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+          </div>
+          <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      `;
 
-            // Query for the active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
             // Request content extraction from the content script
             const response = await chrome.tabs.sendMessage(tab.id, { action: "extractContent" });
-            if (!response || !response.content) throw new Error('Failed to extract page content');
+            if (!response?.content) throw new Error('Failed to extract page content');
 
             // Prepare payload for API call
             const payload = {
@@ -147,10 +400,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 count: document.getElementById('count').value
             };
 
-            // Set a timeout for the API request
             const timeout = setTimeout(() => {
                 quizContainer.innerHTML = '<div class="error">Request timed out (30s)</div>';
-            }, 30000);
+            }, 50000);
 
             // Send message to background script to generate the quiz
             chrome.runtime.sendMessage({ action: "generateQuiz", payload }, (apiResponse) => {
@@ -159,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!apiResponse) {
                         throw new Error('Empty response from API');
                     }
-                    // Clean and parse the API response
                     const cleanedResponse = cleanApiResponse(apiResponse);
                     const parsed = JSON.parse(cleanedResponse);
 
@@ -169,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!Array.isArray(parsed)) {
                         throw new Error('Invalid question format received');
                     }
-                    // Display the quiz questions (this function updates the UI accordingly)
+                    // Display the quiz questions
                     displayQuiz(parsed);
                 } catch (e) {
                     console.error('Processing Error:', e);
@@ -182,36 +433,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    // Save button handler (already implemented)
+    // Save button handler
     document.getElementById('save-btn').addEventListener('click', () => {
         const quizData = {
             questions: questions,
             quizHTML: quizContainer.innerHTML
         };
         chrome.storage.local.set({ lastQuiz: quizData });
-        // Display a styled message in the quizContainer
         const successMessage = document.createElement('div');
         successMessage.className = 'success';
         successMessage.textContent = 'Quiz saved successfully!';
         quizContainer.appendChild(successMessage);
-
-        // Remove the message after a few seconds
         setTimeout(() => {
             successMessage.remove();
         }, 3000);
     });
 
-    // Export JSON functionality remains unchanged
+    // Export JSON functionality
     document.getElementById('export-json').addEventListener('click', () => {
         const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         chrome.downloads.download({ url, filename: `quiz_${Date.now()}.json` });
     });
 
-    // Updated copy functionality to always include both questions and answers
+    // Copy to clipboard functionality
     document.getElementById('copy-clipboard').addEventListener('click', () => {
-        // Build a text that includes both questions and answers from the stored data
         const allText = questions.map((q, i) => {
             let text = `Question ${i + 1}: ${q.question}\n`;
             if (q.options && q.options.length) {
@@ -221,37 +467,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return text;
         }).join('\n\n');
         navigator.clipboard.writeText(allText);
-        // Display a styled message in the quizContainer
         const successMessage = document.createElement('div');
         successMessage.className = 'success';
         successMessage.textContent = 'Questions and answers copied to clipboard!';
         quizContainer.appendChild(successMessage);
-
-        // Remove the message after a few seconds
         setTimeout(() => {
             successMessage.remove();
         }, 3000);
     });
 
-    // New Clear button functionality: clears the quiz and stored data
+    // Clear quiz functionality
     document.getElementById('clear-btn').addEventListener('click', () => {
-        // Clear the displayed quiz
         quizContainer.innerHTML = '';
-        // Reset the global questions variable
         questions = [];
-        // Remove saved quiz from chrome storage
         chrome.storage.local.remove('lastQuiz', () => {
-            // Optionally, provide user feedback (can be replaced with a styled notification)
-            // alert('Quiz cleared!');
-            // You can replace the alert with a styled message in the quizContainer
             quizContainer.innerHTML = '<div class="success">Quiz cleared!</div>';
-
-            // You'll need to add CSS for the "success" class to style the message
-            // For example:
-
         });
     });
-
-
-
 });

@@ -4,15 +4,22 @@
 <head>
     <title>Quiz Crawler</title>
     <link rel="stylesheet" href="popup.css">
+    <!-- Add Prism CSS theme (you can choose different themes) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+    <!-- Load scripts in the correct order -->
+    <script src="lib/mermaid.min.js"></script>
+<script src="prism.js"></script>
 </head>
 
 <body>
+    <!-- Rest of your HTML remains unchanged -->
     <div id="container">
         <div class="header">
             <h2>Quiz Crawler</h2>
             <div class="controls">
-            <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
-            <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
+                <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
+                <button id="maximize-btn" class="maximize-btn">&#x26F6;</button>
+                <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
             </div>
         </div>
 
@@ -34,9 +41,11 @@
 
                 <label for="category">Category:</label>
                 <select id="category">
-                    <option>Coding Examples</option>
                     <option>General</option>
+                    <option>Coding Examples</option>
+                    <option value="scenario-based">Scenario-Based</option>
                     <option>Conceptual</option>
+                    <option value="diagram">Mermaid Diagram</option>
                 </select>
 
                 <label for="count">Questions:</label>
@@ -48,11 +57,8 @@
                 <div class="generate-btn-div">
                     <button id="generate-btn">Generate Quiz</button>
                 </div>
-
             </div>
-
         </div>
-
 
         <div id="quiz-container"></div>
         <div class="storage-controls">
@@ -62,7 +68,10 @@
             <button id="clear-btn">Clear Quiz</button>
         </div>
     </div>
+
+    <!-- Load the bundled code after DOM elements are available -->
     <script src="dist/bundle.js"></script>
+    <!-- Your main popup script should come last -->
     <script src="popup.js"></script>
 </body>
 

@@ -3,14 +3,103 @@ const OPENAI_API_KEY = 'sk-proj-AIeMLxsBBGIKgtiFLzBAXVnoCBJdh-r__E81wWThXZLyZ09t
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "generateQuiz") {
         const { content, difficulty, category, count } = request.payload;
-        const prompt = `Generate ${count} ${difficulty} level ${category} questions with answers based on:
-${content}
-Format response as valid JSON array with objects containing:
+        const prompt = `Generate ${count} ${difficulty} level questions in the "${category}" category based on: ${content}
+
+For each question, follow these category-specific requirements:
+- "General": Open-ended questions about common practices
+- "Coding Examples": Include code snippets/implementation questions
+- "Scenario-Based": Situational questions with multiple-choice options
+- "Conceptual": Theory/principle explanation questions
+- "Mermaid Diagram": Questions requiring flow/architecture diagrams
+
+Format response as valid JSON array containing objects with:
 {
-  "question": "...",
-  "options": ["...", "..."],  // optional for open-ended questions
-  "answer": "..."
-}`;
+  "type": "${category.toLowerCase().replace(' ', '-')}",  // Auto-generated from category
+  "question": "Category-appropriate question text",
+  "options": ["..."] // Required for Scenario-Based, optional otherwise,
+  "answer": "Detailed solution",
+  "diagram": "mermaid syntax" // Only for Mermaid Diagram category
+}
+
+Include these category-specific elements:
+- Coding Examples Rules:
+1. For code examples: Use "~~~language" syntax to indicate code blocks like "~~~javascript" or "~~~python"
+2. Always specify the language after the ~~~ for proper syntax highlighting
+3. Format code answer as:
+{
+  "type": "coding-examples",
+  "question": "Write Python code to read a file",
+  "answer": "To read a file in Python:\\n\\n~~~python\\nwith open('file.txt') as f:\\n    print(f.read())\\n~~~\\n\\nThis code opens the file and reads its content.",
+  "diagram": null
+}
+
+- Scenario-Based: 4 plausible options per question
+- Conceptual: Ask for comparisons/definitions
+- Mermaid Diagram: Include complete diagram in answer
+
+Example structures:
+1. Scenario-Based:
+For Scenario-Based questions use EXACTLY this format:
+{
+  "type": "scenario-based",
+  "question": "Which method is best for...",
+  "options": [
+    "Option 1 text",  // No markdown
+    "Option 2 text",
+    "Option 3 text",
+    "Option 4 text"
+  ],
+  "answer": "Exact matching option text" // Must match one option exactly
+  "diagram": null
+}
+
+Key requirements:
+- Answer must be identical to one option text
+- No markdown in options/answers
+- No explanations in answers for MCQs
+
+2. Mermaid Diagram:
+{
+  "type": "mermaid-diagram",
+  "question": "Visualize the workflow for...",
+  "answer": "System description",
+  "diagram": "graph TD\\n  A-->B"
+}
+
+For Mermaid Diagrams STRICTLY REQUIRE:
+- Use ONLY official syntax from Mermaid v11.5.0
+- No special characters in node labels like ()[]{}
+- Escape special characters with double quotes
+- Proper indentation and line breaks
+- Explicit arrow syntax (--> not -- >)
+- No hanging connections
+- Explicitly complete all paths
+- Valid flow structure
+- Always wrap node labels in double quotes
+- Escape special characters: () -> &#40;&#41;, {} -> &#123;&#125;
+- Use full arrows (--> not - or ->)
+- Example format:
+graph TD
+    A["Start"] --> B["Process&#40;input&#41;"]
+    B --> C{"Decision?"}
+    C -->|Yes| D["Success"]
+    C -->|No| E["Retry"]
+
+BAD EXAMPLES:
+graph TD
+        A[Start]-- > B[Process]-- > C[End]
+graph TD
+    A[Start] - > B[Process]
+    B - C{Decision(mobile?)}
+
+GOOD EXAMPLE:
+graph TD
+    A[Start] --> B[Process]
+    B --> C{Decision}
+    C -->|Yes| D[End]
+    C -->|No| B
+
+Ensure valid JSON syntax and proper escaping. Generate exactly ${count} items.`;
 
         console.log('API Request:', prompt);
 

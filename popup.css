@@ -320,8 +320,10 @@ button:active {
     border: 1px solid #e5e7eb;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: all 0.2s ease;
     font-size: 15px;
+    position: relative;
+    overflow: hidden;
 }
 
 .option:hover {
@@ -329,21 +331,40 @@ button:active {
     border-color: #d1d5db;
 }
 
-.option.selected {
-    background-color: rgba(124, 58, 237, 0.1);
-    border-color: var(--primary);
-}
-
+/* Correct answer styling */
 .option.correct {
-    background-color: rgba(16, 185, 129, 0.1);
-    border-color: var(--success);
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: var(--success) !important;
+    animation: correct-pulse 0.5s ease;
 }
 
+/* Incorrect answer styling */
 .option.incorrect {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-color: var(--danger);
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: var(--danger) !important;
+    animation: incorrect-shake 0.4s ease;
 }
 
+/* Dim other options when correct is selected */
+.option.dimmed {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+}
+
+
+@keyframes correct-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+@keyframes incorrect-shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+}
 .storage-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -618,3 +639,178 @@ button:active {
     transform: translateY(0);
   }
 }
+/* Diagram container styling */
+.diagram {
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius);
+  min-height: 200px;
+  padding: 16px;
+  margin-top: 16px;
+  background-color: white;
+  overflow: auto;
+}
+
+/* Toggle diagram button styling */
+.toggle-diagram {
+  background-color: #4b5563;
+  padding: 8px 14px;
+  font-size: 14px;
+  margin-top: 12px;
+  display: inline-block;
+}
+
+.toggle-diagram:hover {
+  background-color: #374151;
+}
+
+/* Error message styling */
+.diagram .error {
+    padding: 12px;
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    border-radius: 4px;
+    color: #dc2626;
+    margin: 10px 0;
+}
+
+.diagram .error pre {
+    white-space: pre-wrap;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+/* SVG styling within diagrams */
+.diagram svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Maximize button style */
+/* Maximize button style */
+.maximize-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.maximize-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Maximized container styles */
+#container.maximized {
+  position: fixed;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none;
+  z-index: 1000;
+  margin: 0;
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.body-maximized {
+  overflow: hidden;
+}
+
+/* Adjust quiz container in maximized view */
+#container.maximized #quiz-container {
+  max-height: calc(95vh - 200px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Adjust questions in maximized view */
+#container.maximized .question {
+  width: calc(50% - 20px);
+  margin-bottom: 20px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s;
+}
+
+#container.maximized .question:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  #container.maximized .question {
+    width: 100%;
+  }
+}
+
+/* Adjust diagram display in maximized view */
+#container.maximized .diagram {
+  min-height: 250px;
+}
+
+.answer pre, .option pre {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+/* Add these styles to your popup.css file */
+
+/* Base code block styling */
+pre[class*="language-"] {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 5px;
+  background-color: #272822; /* Matches Prism okaidia theme */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+code[class*="language-"] {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;
+  text-align: left;
+  /* The Prism theme will handle most of the token coloring */
+}
+
+/* Fallback for cases where Prism doesn't apply */
+.code-block {
+  background-color: #272822;
+  color: #f8f8f2;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 480px) {
+  pre[class*="language-"],
+  .code-block {
+    font-size: 12px;
+    padding: 0.5em;
+  }
+}
+

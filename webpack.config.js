@@ -25,6 +25,11 @@ module.exports = {
                     },
                 },
             },
+            // Add new rule for CSS files
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
+            },
         ],
     },
     // Resolve JavaScript file extensions
