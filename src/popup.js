@@ -16,12 +16,14 @@ window.process = process;
 // Initialize mermaid with proper configuration
 mermaid.initialize({
     startOnLoad: false,
-    theme: 'default',
     securityLevel: 'loose',
     flowchart: {
         useMaxWidth: true,
-        htmlLabels: true
-    }
+        htmlLabels: true, // Better compatibility
+        curve: 'linear'
+    },
+    theme: 'forest',
+    logLevel: 0 // Enable error logging
 });
 
 let questions = []; // Global variable to hold quiz data
@@ -157,25 +159,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to safely render mermaid diagrams
-    function renderMermaidDiagram(container, diagramCode) {
-        // Create a unique ID for the diagram
-        const uniqueId = 'mermaid-diagram-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    // Add these functions at the top of your file
+    function sanitizeMermaidCode(code) {
+        return code
+            // Escape special characters
+            .replace(/\(/g, '&#40;')   // Escape (
+            .replace(/\)/g, '&#41;')   // Escape )
+            .replace(/{/g, '&#123;')    // Escape {
+            .replace(/}/g, '&#125;')    // Escape }
+            // Fix node formatting
+            .replace(/\[([^\]]+)\]/g, '["$1"]') // Wrap labels in quotes
+            // Fix arrow syntax
+            .replace(/--\s?>/g, '-->')  // Ensure proper arrow format
+            .replace(/\s-\s*$/gm, '');   // Remove trailing dashes
+    }
 
+    function validateMermaidSyntax(code) {
+        const errors = [];
+        const lines = code.split('\n');
+
+        lines.forEach((line, index) => {
+            if (/(\w+)\s-$/.test(line)) {
+                errors.push(`Line ${index + 1}: Incomplete arrow syntax`);
+            }
+            if (/\[[^\]]+$/.test(line)) {
+                errors.push(`Line ${index + 1}: Unclosed node bracket`);
+            }
+        });
+
+        return {
+            valid: errors.length === 0,
+            errors
+        };
+    }
+
+    // Update your existing render function
+    async function renderMermaidDiagram(container, diagramCode) {
         try {
-            console.log("Attempting to render diagram with code:", diagramCode);
-            // Try to render the diagram
-            mermaid.render(uniqueId, diagramCode).then(result => {
-                console.log("Render successful:", result);
-                container.innerHTML = result.svg;
-            }).catch(error => {
-                console.error("Mermaid render error:", error);
-                container.innerHTML = `<div class="error">Error rendering diagram: ${error.message}</div>`;
-            });
+            const cleanCode = sanitizeMermaidCode(diagramCode);
+            const validation = validateMermaidSyntax(cleanCode);
+
+            if (!validation.valid) {
+                throw new Error(`Diagram validation failed:\n${validation.errors.join('\n')}`);
+            }
+
+            const { svg } = await mermaid.render(
+                `mermaid-${Date.now()}`,
+                cleanCode
+            );
+            container.innerHTML = svg;
         } catch (error) {
-            console.error("Error in mermaid rendering process:", error);
-            container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            console.error('Mermaid render error:', error);
+            container.innerHTML = `
+            <div class="error">
+                <strong>Diagram Error:</strong> ${error.message.split('\n')[0]}
+                <pre>Original Code:\n${diagramCode}\n\nSanitized Code:\n${cleanCode}</pre>
+            </div>
+        `;
         }
     }
+
+
 
     // Function to display the generated quiz questions
     function displayQuiz(receivedQuestions) {
@@ -194,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${q.question}</p>
                 ${q.options ? q.options.map((o, idx) => `
                     <div class="option" data-correct="${isCorrectAnswer(o, q.answer)}">
-    ${String.fromCharCode(65 + idx)}) ${o.replace(/~~~/g, '')} // Remove code fences
+    ${String.fromCharCode(65 + idx)}) ${o.replace(/~~~/g, '')}
 </div>
                 `).join('') : ''}
                 <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
@@ -251,22 +295,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Toggle Diagram functionality with improved error handling
         quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+            // In your diagram toggle event listener:
             button.addEventListener('click', function () {
                 const diagramDiv = this.parentElement.querySelector('.diagram');
-                if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
+                if (diagramDiv.style.display === 'none') {
                     diagramDiv.style.display = 'block';
-                    diagramDiv.style.minHeight = '200px'; // Ensure there's enough height
                     this.textContent = 'Hide Diagram';
 
-                    // Get diagram code from the data attribute
-                    const diagramCode = diagramDiv.getAttribute('data-diagram-code');
-                    if (!diagramCode) {
-                        console.error('No diagram code found');
-                        diagramDiv.innerHTML = '<div class="error">No diagram code found</div>';
-                        return;
-                    }
+                    const rawCode = diagramDiv.dataset.diagramCode;
+                    const diagramCode = sanitizeMermaidCode(rawCode);
 
-                    // Render the diagram
                     renderMermaidDiagram(diagramDiv, diagramCode);
                 } else {
                     diagramDiv.style.display = 'none';

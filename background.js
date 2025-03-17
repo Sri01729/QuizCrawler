@@ -66,6 +66,39 @@ Key requirements:
   "diagram": "graph TD\\n  A-->B"
 }
 
+For Mermaid Diagrams STRICTLY REQUIRE:
+- Use ONLY official syntax from Mermaid v11.5.0
+- No special characters in node labels like ()[]{}
+- Escape special characters with double quotes
+- Proper indentation and line breaks
+- Explicit arrow syntax (--> not -- >)
+- No hanging connections
+- Explicitly complete all paths
+- Valid flow structure
+- Always wrap node labels in double quotes
+- Escape special characters: () -> &#40;&#41;, {} -> &#123;&#125;
+- Use full arrows (--> not - or ->)
+- Example format:
+graph TD
+    A["Start"] --> B["Process&#40;input&#41;"]
+    B --> C{"Decision?"}
+    C -->|Yes| D["Success"]
+    C -->|No| E["Retry"]
+
+BAD EXAMPLES:
+graph TD
+        A[Start]-- > B[Process]-- > C[End]
+graph TD
+    A[Start] - > B[Process]
+    B - C{Decision(mobile?)}
+
+GOOD EXAMPLE:
+graph TD
+    A[Start] --> B[Process]
+    B --> C{Decision}
+    C -->|Yes| D[End]
+    C -->|No| B
+
 Ensure valid JSON syntax and proper escaping. Generate exactly ${count} items.`;
 
         console.log('API Request:', prompt);

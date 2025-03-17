@@ -665,12 +665,21 @@ button:active {
 
 /* Error message styling */
 .diagram .error {
-  color: var(--danger);
-  padding: 12px;
-  background-color: rgba(239, 68, 68, 0.1);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--danger);
-  margin: 10px 0;
+    padding: 12px;
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    border-radius: 4px;
+    color: #dc2626;
+    margin: 10px 0;
+}
+
+.diagram .error pre {
+    white-space: pre-wrap;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
 }
 
 /* SVG styling within diagrams */
@@ -804,3 +813,4 @@ code[class*="language-"] {
     padding: 0.5em;
   }
 }
+
