@@ -244,6 +244,41 @@ function completeLogout(fromRating = false) {
   5. Force state reset for clean login screen
 ```
 
+### Problem 4: Goodbye Message Interaction
+**Problem Description:**
+- Close button in goodbye message not functioning
+- Wave emoji potentially rendering incorrectly in some browsers
+
+**Attempted Solution:**
+Using inline onclick handler and direct emoji
+```javascript
+<button class="btn" onclick="completeLogout(true)">Close</button>
+<p>Hope to see you again soon. Have a great day! 👋</p>
+```
+
+**Working Solution:**
+Used proper event listener and HTML entity
+```javascript
+function showGoodbyeMessage() {
+    const mainUI = document.getElementById('main-ui');
+    mainUI.innerHTML = `
+        <div class="rating-dialog">
+            <h3>Thanks for using Quiz Crawler!</h3>
+            <p>Hope to see you again soon. Have a great day! &#128075;</p>
+            <button class="btn" id="close-goodbye">Close</button>
+        </div>
+    `;
+
+    document.getElementById('close-goodbye').addEventListener('click', () => {
+        completeLogout(true);
+    });
+}
+```
+
+**Side Effects:**
+- More reliable button interaction
+- Consistent emoji rendering across browsers
+
 # Authentication and User Experience Issues
 
 ## Login/Logout Flow Issues

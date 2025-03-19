@@ -706,12 +706,17 @@ document.addEventListener('DOMContentLoaded', () => {
         mainUI.innerHTML = `
             <div class="rating-dialog">
                 <h3>Thanks for using Quiz Crawler!</h3>
-                <p>Hope to see you again soon. Have a great day! 👋</p>
+                <p>Hope to see you again soon. Have a great day! &#128075;</p>
                 <div class="rating-buttons">
-                    <button class="btn" onclick="completeLogout(true)">Close</button>
+                    <button class="btn" id="close-goodbye">Close</button>
                 </div>
             </div>
         `;
+
+        // Add event listener to the close button
+        document.getElementById('close-goodbye').addEventListener('click', () => {
+            completeLogout(true);
+        });
     }
 
     async function logout() {
