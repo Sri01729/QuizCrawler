@@ -29,17 +29,26 @@ body {
     color: var(--text);
     font-size: 14px;
     line-height: 1.5;
-    border-radius: var(--border-radius);
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
 }
 
 #container {
     width: 420px;
-    background-color: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    margin: 0 auto;
+    min-height: 600px;
+    max-height: 800px;
+    display: flex;
+    flex-direction: column;
     position: relative;
+}
+
+/* For sidebar mode */
+.sidebar-mode #container {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
 }
 
 .header {
@@ -91,6 +100,7 @@ body {
     background-color: #f9fafb;
     border-bottom: 1px solid #e5e7eb;
     overflow: hidden;
+    width: auto;
 }
 
 .config-header {
@@ -216,31 +226,26 @@ button:active {
 }
 
 .generate-btn-div {
-    width: 380px;
+    grid-column: 1 / -1;  /* This makes it span from first to last column */
+    width: 100%;
     display: flex;
     justify-content: center;
 }
 
 #generate-btn {
-    margin: 24px auto;
-    /* Centered with more margin */
-    width: calc(100% - 48px);
+    width: 100%;  /* Make button fill the container */
+    margin: 24px 0;  /* Adjust vertical margin */
     padding: 14px;
-    /* Increased padding */
     font-size: 18px;
-    /* Increased font size */
     font-weight: 600;
     background-color: var(--primary);
-    display: block;
 }
 
 #quiz-container {
-    padding: 0 24px;
-    /* Increased padding */
-    max-height: 400px;
-    /* Increased max height */
+    flex: 1;
     overflow-y: auto;
-    margin-bottom: 24px;
+    padding: 0 24px;
+    margin-bottom: 0; /* Remove margin as we're using flex */
 }
 
 /* Styling for generated quiz content */
@@ -368,12 +373,17 @@ button:active {
     100% { transform: translateX(0); }
 }
 .storage-controls {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     padding: 20px 24px;
     background-color: #f9fafb;
     border-top: 1px solid #e5e7eb;
+    z-index: 10; /* Ensure it stays above content */
 }
 
 #save-btn {
@@ -694,23 +704,7 @@ button:active {
 
 /* Maximize button style */
 /* Maximize button style */
-.maximize-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.maximize-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+/* .maximize-btn { ... } */
 
 /* Maximized container styles */
 #container.maximized {
@@ -1144,4 +1138,12 @@ code[class*="language-"] {
 
 .skip-rating {
     background-color: #6b7280 !important;
+}
+
+/* Add padding to main content to prevent overlap with fixed controls */
+#main-ui {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding-bottom: 100px; /* Adjust based on storage controls height */
 }

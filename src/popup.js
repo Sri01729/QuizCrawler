@@ -80,9 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleConfigBtn = document.getElementById('toggle-config');
     const configWrapper = document.querySelector('.config-wrapper');
     const refreshBtn = document.getElementById('refresh-btn');
-    const minimizeBtn = document.getElementById('minimize-btn');
-    const maximizeBtn = document.getElementById('maximize-btn');
-    maximizeBtn.addEventListener('click', toggleMaximize);
+    // const maximizeBtn = document.getElementById('maximize-btn');
 
     // Check if opened in maximized mode
     if (window.location.hash === '#maximized') {
@@ -105,36 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', handleDiagramToggle);
         });
     }
-    // Toggle minimize/restore function
-    function toggleMinimize() {
-        const container = document.getElementById('container');
-        if (!container.classList.contains('minimized')) {
-            container.dataset.fullHeight = container.style.height || container.offsetHeight + 'px';
-            container.classList.add('minimized');
-            container.style.height = '60px'; // Set minimized height
-        } else {
-            container.classList.remove('minimized');
-            container.style.height = container.dataset.fullHeight || '500px'; // Restore previous height
-        }
-    }
 
-    function toggleMaximize() {
-        // Save current state to localStorage
-        const quizState = {
-            questions: questions,
-            html: quizContainer.innerHTML
-        };
-        localStorage.setItem('quizState', JSON.stringify(quizState));
-
-        // Open in new tab
-        chrome.tabs.create({
-            url: chrome.runtime.getURL('popup.html#maximized'),
-            active: true
-        });
-
-        // Close the popup
-        window.close();
-    }
 
     refreshBtn.addEventListener('click', async () => {
         try {
@@ -148,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error refreshing the page:', error);
         }
     });
-    minimizeBtn.addEventListener('click', toggleMinimize);
+
 
     toggleConfigBtn.addEventListener('click', function () {
         configWrapper.classList.toggle('collapsed');
@@ -382,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="circle"></div>
             <div class="circle"></div>
             <div class="circle"></div>
-            <div class="loading-brain"></div>
+           <div class="loading-brain"></div>
             <div class="loading-brain"></div>
             <div class="loading-brain"></div>
             <div class="loading-brain"></div>
@@ -392,9 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dot"></div>
             <div class="dot"></div>
           </div>
-        </div>
-      `;
+        </div>`;
 
+            // Get current tab and extract content
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
@@ -408,40 +377,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 count: document.getElementById('count').value
             };
 
-            const timeout = setTimeout(() => {
-                quizContainer.innerHTML = '<div class="error">Request timed out (30s)</div>';
-            }, 50000);
+            console.log('Sending payload:', payload); // Debug log
 
             // Send message to background script to generate the quiz
-            chrome.runtime.sendMessage({
-                action: "generateQuiz",
-                payload,
-                jwt // Add JWT here
-            }, (apiResponse) => {
-                clearTimeout(timeout);
-                try {
-                    if (!apiResponse) {
-                        throw new Error('Empty response from API');
-                    }
-                    const cleanedResponse = cleanApiResponse(apiResponse);
-                    const parsed = JSON.parse(cleanedResponse);
-
-                    if (parsed.error) {
-                        throw new Error(parsed.error);
-                    }
-                    if (!Array.isArray(parsed)) {
-                        throw new Error('Invalid question format received');
-                    }
-                    // Display the quiz questions
-                    displayQuiz(parsed);
-                } catch (e) {
-                    console.error('Processing Error:', e);
-                    quizContainer.innerHTML = `<div class="error">Error: ${e.message}</div>`;
-                }
+            const apiResponse = await fetch('http://localhost:3000/api/generate-quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify(payload)
             });
-        } catch (e) {
-            console.error('General Error:', e);
-            quizContainer.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+
+            console.log('API Response status:', apiResponse.status); // Debug log
+
+            if (!apiResponse.ok) {
+                const errorData = await apiResponse.json();
+                throw new Error(errorData.error || 'API request failed');
+            }
+
+            const data = await apiResponse.json();
+            console.log('API Response data:', data); // Debug log
+
+            if (!data || data.error) {
+                throw new Error(data?.error || 'Invalid response from API');
+            }
+
+            // Display the quiz questions
+            displayQuiz(data);
+
+        } catch (error) {
+            console.error('Generation Error:', error);
+            quizContainer.innerHTML = `<div class="error">Error: ${error.message}</div>`;
         }
     });
 
@@ -641,47 +608,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function login() {
-        chrome.identity.getAuthToken({ interactive: true }, function(token) {
-            if (chrome.runtime.lastError) {
-                console.error('Chrome identity error:', chrome.runtime.lastError);
                 const loginScreen = document.getElementById('login-screen');
-                loginScreen.innerHTML += `<div class="error">Login failed: ${chrome.runtime.lastError.message}</div>`;
-                return;
-            }
 
             // Show loading state
-            const loginScreen = document.getElementById('login-screen');
-            loginScreen.innerHTML = `
-                <div class="loading-container">
-                    <div class="loading-text">Logging in...</div>
-                    <div class="loading-spinner">
-                        <div class="circle"></div>
-                        <div class="circle"></div>
-                        <div class="circle"></div>
-                    </div>
-                </div>`;
+        loginScreen.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-text">Logging in...</div>
+                <div class="loading-spinner">
+                    <div class="circle"></div>
+                    <div class="circle"></div>
+                    <div class="circle"></div>
+                 <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
+          </div>
+          <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>`;
 
-            fetch('http://localhost:3000/api/auth/google', {
+        chrome.identity.getAuthToken({ interactive: true }, async function(token) {
+            try {
+                if (chrome.runtime.lastError) {
+                    throw new Error(chrome.runtime.lastError.message);
+                }
+
+                console.log('Got token:', token); // Debug log
+
+                const response = await fetch('http://localhost:3000/api/auth/google', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ token })
-            })
-            .then(res => res.json())
-            .then(data => {
+                });
+
+                console.log('Server response status:', response.status); // Debug log
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Server error');
+                }
+
+                const data = await response.json();
+
+                if (!data.token) {
+                    throw new Error('No token received from server');
+                }
+
                 chrome.storage.local.set({ 'jwt': data.token }, () => {
                     const loginScreen = document.getElementById('login-screen');
                     const mainUI = document.getElementById('main-ui');
 
                     loginScreen.style.display = 'none';
-                    mainUI.style.display = 'block';
+                        mainUI.style.display = 'block';
                 });
-            })
-            .catch(err => {
-                console.error('Auth error:', err);
-                showLoginScreen(); // Show login screen again on error
-            });
+
+            } catch (error) {
+                console.error('Login error:', error); // Debug log
+
+                // Reset login screen with error message
+                loginScreen.innerHTML = `
+                    <div>
+                        <h1 class="title">Welcome to Quiz Crawler</h1>
+                        <p class="subtitle">Sign in to continue to your account</p>
+                    </div>
+                    <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
+                        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            <path fill="none" d="M0 0h48v48H0z"/>
+                        </svg>
+                        <span class="btn-text">Sign in with Google</span>
+                    </button>
+                    <div class="error">Login failed: ${error.message}</div>`;
+
+                // Reattach login event listener
+                document.getElementById('loginBtn').addEventListener('click', login);
+            }
         });
     }
 
@@ -755,5 +764,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Authorization': `Bearer ${jwt}`
             }
         });
+    }
+
+    // Listen for extension icon clicks
+    chrome.action.onClicked.addListener((tab) => {
+        chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
+    });
+
+    // Add this to your DOMContentLoaded event listener
+    document.getElementById('toggle-sidebar').addEventListener('click', () => {
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "toggleSidebar" });
+        });
+    });
+
+    // Add this function
+    function switchToSidebar() {
+        chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+            // First inject our sidebar
+            await chrome.tabs.sendMessage(tabs[0].id, { action: "injectSidebar" });
+            // Then close the popup
+            window.close();
+        });
+    }
+
+    // Check if we're in sidebar mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSidebar = urlParams.get('sidebar') === 'true';
+
+    if (isSidebar) {
+        document.body.classList.add('sidebar-mode');
+        // Hide the "Switch to Sidebar" button in sidebar mode
+        const switchButton = document.querySelector('.switch-to-sidebar');
+        if (switchButton) {
+            switchButton.style.display = 'none';
+        }
+    }
+
+    // Add switch to sidebar button (only in popup mode)
+    if (!isSidebar) {
+        // Remove or comment out this section
+        /*
+        const header = document.querySelector('.header .controls');
+        const switchButton = document.createElement('button');
+        switchButton.className = 'btn switch-to-sidebar';
+        switchButton.innerHTML = '&#8689;';
+        switchButton.title = 'Switch to Sidebar Mode';
+        header.prepend(switchButton);
+        */
+
+        switchButton.addEventListener('click', switchToSidebar);
     }
 });
