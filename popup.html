@@ -8,64 +8,78 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
     <!-- Load scripts in the correct order -->
     <script src="lib/mermaid.min.js"></script>
-<script src="prism.js"></script>
+    <script src="prism.js"></script>
 </head>
 
 <body>
-    <!-- Rest of your HTML remains unchanged -->
     <div id="container">
-        <div class="header">
-            <h2>Quiz Crawler</h2>
-            <div class="controls">
-                <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
-                <button id="maximize-btn" class="maximize-btn">&#x26F6;</button>
-                <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
-            </div>
+        <!-- Login Screen -->
+        <div id="login-screen">
+            <button id="loginBtn" class="google-btn">
+                <div class="google-icon-wrapper">
+                    <img class="google-icon"
+                        src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=">
+                </div>
+                <span class="btn-text">Login with Google</span>
+            </button>
         </div>
 
-        <div class="config-wrapper">
-            <div class="config-header">
-                <span>Settings</span>
-                <button id="toggle-config" class="toggle-config" title="Toggle Settings">
-                    <span class="chevron-down">&#9660;</span>
-                    <span class="chevron-up">&#9650;</span>
-                </button>
-            </div>
-            <div class="config-section">
-                <label for="difficulty">Difficulty:</label>
-                <select id="difficulty">
-                    <option>Easy</option>
-                    <option>Medium</option>
-                    <option>Hard</option>
-                </select>
-
-                <label for="category">Category:</label>
-                <select id="category">
-                    <option>General</option>
-                    <option>Coding Examples</option>
-                    <option value="scenario-based">Scenario-Based</option>
-                    <option>Conceptual</option>
-                    <option value="diagram">Mermaid Diagram</option>
-                </select>
-
-                <label for="count">Questions:</label>
-                <select id="count">
-                    <option>1-10</option>
-                    <option>20-30</option>
-                    <option>40-50</option>
-                </select>
-                <div class="generate-btn-div">
-                    <button id="generate-btn">Generate Quiz</button>
+        <!-- Main UI (initially hidden) -->
+        <div id="main-ui" style="display: none;">
+            <div class="header">
+                <h2>Quiz Crawler</h2>
+                <div class="controls">
+                    <button id="logoutBtn" class="small-logout-btn">Logout</button>
+                    <button id="refresh-btn" class="refresh-btn">&#x21bb;</button>
+                    <button id="maximize-btn" class="maximize-btn">&#x26F6;</button>
+                    <button id="minimize-btn" class="minimize-btn">&#x2013;</button>
                 </div>
             </div>
-        </div>
 
-        <div id="quiz-container"></div>
-        <div class="storage-controls">
-            <button id="save-btn">Save Quiz</button>
-            <button id="export-json">Export JSON</button>
-            <button id="copy-clipboard">Copy</button>
-            <button id="clear-btn">Clear Quiz</button>
+            <div class="config-wrapper">
+                <div class="config-header">
+                    <span>Settings</span>
+                    <button id="toggle-config" class="toggle-config" title="Toggle Settings">
+                        <span class="chevron-down">&#9660;</span>
+                        <span class="chevron-up">&#9650;</span>
+                    </button>
+                </div>
+                <div class="config-section">
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty">
+                        <option>Easy</option>
+                        <option>Medium</option>
+                        <option>Hard</option>
+                    </select>
+
+                    <label for="category">Category:</label>
+                    <select id="category">
+                        <option>General</option>
+                        <option>Coding Examples</option>
+                        <option value="scenario-based">Scenario-Based</option>
+                        <option>Conceptual</option>
+                        <option value="diagram">Mermaid Diagram</option>
+                    </select>
+
+                    <label for="count">Questions:</label>
+                    <select id="count">
+                        <option>1-10</option>
+                        <option>20-30</option>
+                        <option>40-50</option>
+                    </select>
+                    <div class="generate-btn-div">
+                        <button id="generate-btn">Generate Quiz</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="quiz-container"></div>
+            <div class="storage-controls">
+                <button id="save-btn">Save Quiz</button>
+                <button id="export-json">Export JSON</button>
+                <button id="copy-clipboard">Copy</button>
+                <button id="clear-btn">Clear Quiz</button>
+            </div>
         </div>
     </div>
 

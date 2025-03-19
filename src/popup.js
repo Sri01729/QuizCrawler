@@ -364,6 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for the Generate Quiz button
     document.getElementById('generate-btn').addEventListener('click', async () => {
         try {
+            // First check if we have a JWT
+            const jwt = await getStoredJWT();
+            if (!jwt) {
+                quizContainer.innerHTML = '<div class="error">Please login first</div>';
+                return;
+            }
+
             // Display loading animation
             quizContainer.innerHTML = `
         <div class="loading-container">
@@ -388,11 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
-            // Request content extraction from the content script
             const response = await chrome.tabs.sendMessage(tab.id, { action: "extractContent" });
             if (!response?.content) throw new Error('Failed to extract page content');
 
-            // Prepare payload for API call
             const payload = {
                 content: response.content.substring(0, 12000),
                 difficulty: document.getElementById('difficulty').value,
@@ -405,7 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 50000);
 
             // Send message to background script to generate the quiz
-            chrome.runtime.sendMessage({ action: "generateQuiz", payload }, (apiResponse) => {
+            chrome.runtime.sendMessage({
+                action: "generateQuiz",
+                payload,
+                jwt // Add JWT here
+            }, (apiResponse) => {
                 clearTimeout(timeout);
                 try {
                     if (!apiResponse) {
@@ -484,4 +493,143 @@ document.addEventListener('DOMContentLoaded', () => {
             quizContainer.innerHTML = '<div class="success">Quiz cleared!</div>';
         });
     });
+
+    // Login functionality
+    document.getElementById('loginBtn').addEventListener('click', login);
+
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // Update login status when popup opens
+    updateLoginStatus();
+
+    // Update login status after login/logout
+    function login() {
+        chrome.identity.getAuthToken({ interactive: true }, function(token) {
+            if (chrome.runtime.lastError) {
+                console.error('Chrome identity error:', chrome.runtime.lastError);
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.innerHTML = `
+                    <button id="loginBtn" class="google-btn">
+                        <div class="google-icon-wrapper">
+                            <img class="google-icon" src="data:image/svg+xml;base64,...">
+                        </div>
+                        <span class="btn-text">Login with Google</span>
+                    </button>
+                    <div class="error">Login failed: ${chrome.runtime.lastError.message}</div>`;
+                return;
+            }
+
+            // Show loading state
+            const loginScreen = document.getElementById('login-screen');
+            loginScreen.innerHTML = '<div class="loading">Logging in...</div>';
+
+            fetch('http://localhost:3000/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token })
+            })
+            .then(res => res.json())
+            .then(data => {
+                chrome.storage.local.set({ 'jwt': data.token }, () => {
+                    // Make sure all elements exist before changing display
+                    const loginScreen = document.getElementById('login-screen');
+                    const mainUI = document.getElementById('main-ui');
+                    const configWrapper = document.querySelector('.config-wrapper');
+                    const quizContainer = document.getElementById('quiz-container');
+
+                    if (loginScreen) loginScreen.style.display = 'none';
+                    if (mainUI) {
+                        mainUI.style.display = 'block';
+                        // Make sure internal elements are visible
+                        if (configWrapper) configWrapper.style.display = 'block';
+                        if (quizContainer) quizContainer.style.display = 'block';
+                    }
+
+                    updateLoginStatus();
+
+                    // Optional: Show success message in quiz container
+                    if (quizContainer) {
+                        quizContainer.innerHTML = '<div class="success">Login successful! Ready to generate quiz.</div>';
+                    }
+                });
+            })
+            .catch(err => {
+                console.error('Auth error:', err);
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.innerHTML = `<div class="error">Login failed: ${err.message}</div>`;
+            });
+        });
+    }
+
+    function logout() {
+        chrome.identity.clearAllCachedAuthTokens(() => {
+            chrome.storage.local.remove('jwt', () => {
+                // Reset login screen to show login button
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.innerHTML = `
+                    <button id="loginBtn" class="google-btn">
+                        <div class="google-icon-wrapper">
+                            <img class="google-icon" src="data:image/svg+xml;base64,...">
+                        </div>
+                        <span class="btn-text">Login with Google</span>
+                    </button>`;
+
+                // Show login screen and hide main UI
+                loginScreen.style.display = 'flex';
+                document.getElementById('main-ui').style.display = 'none';
+
+                // Reattach login button event listener
+                document.getElementById('loginBtn').addEventListener('click', login);
+
+                updateLoginStatus();
+            });
+        });
+    }
+
+    // Helper to get stored JWT
+    function getStoredJWT() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get('jwt', (result) => {
+                resolve(result.jwt);
+            });
+        });
+    }
+
+    // Use this when making API calls
+    async function makeAuthenticatedRequest(url, options = {}) {
+        const jwt = await getStoredJWT();
+        return fetch(url, {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${jwt}`
+            }
+        });
+    }
+
+    // Add login status indicator
+    function updateLoginStatus() {
+        getStoredJWT().then(jwt => {
+            const loginScreen = document.getElementById('login-screen');
+            const mainUI = document.getElementById('main-ui');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (jwt) {
+                loginScreen.style.display = 'none';
+                mainUI.style.display = 'block';
+                if (logoutBtn) {
+                    logoutBtn.style.display = 'inline-flex'; // Make sure logout button is visible
+                }
+            } else {
+                loginScreen.style.display = 'flex';
+                mainUI.style.display = 'none';
+                if (logoutBtn) {
+                    logoutBtn.style.display = 'none';
+                }
+            }
+        });
+    }
 });
