@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Quiz Crawler",
   "version": "1.0",
-  "permissions": ["activeTab", "storage", "scripting", "clipboardWrite","downloads"],
+  "permissions": ["activeTab", "storage", "scripting", "clipboardWrite","downloads", "tabs"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icons/icon128.png"

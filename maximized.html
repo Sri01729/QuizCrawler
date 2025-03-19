@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<title>Quiz Crawler</title>
+<link rel="stylesheet" href="popup.css">
+<!-- Add Prism CSS theme (you can choose different themes) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+<!-- Load scripts in the correct order -->
+<script src="lib/mermaid.min.js"></script>
+<script src="prism.js"></script>
+    <style>
+        /* Add these styles */
+       /* Fullscreen-specific styles */
+        body {
+            width: 100vw !important;
+            min-width: 100% !important;
+            height: 100vh !important;
+            padding: 20px;
+            margin: 0;
+            overflow: auto;
+        }
+
+        #container {
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #quiz-container {
+            max-height: none !important;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .question {
+            width: 100% !important;
+            max-width: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Same body content as popup.html -->
+    <script src="dist/bundle.js"></script>
+</body>
+
+</html>

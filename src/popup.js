@@ -81,7 +81,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const maximizeBtn = document.getElementById('maximize-btn');
     maximizeBtn.addEventListener('click', toggleMaximize);
 
+    // Check if opened in maximized mode
+    if (window.location.hash === '#maximized') {
+        const savedState = localStorage.getItem('quizState');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            questions = state.questions;
+            quizContainer.innerHTML = state.html;
+            rebindEventListeners();
+        }
+    }
 
+    function rebindEventListeners() {
+        // Re-attach all event listeners (your existing displayQuiz handlers)
+        quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
+            button.addEventListener('click', handleAnswerToggle);
+        });
+
+        quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+            button.addEventListener('click', handleDiagramToggle);
+        });
+    }
     // Toggle minimize/restore function
     function toggleMinimize() {
         const container = document.getElementById('container');
@@ -96,41 +116,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function toggleMaximize() {
-        const container = document.getElementById('container');
+        // Save current state to localStorage
+        const quizState = {
+            questions: questions,
+            html: quizContainer.innerHTML
+        };
+        localStorage.setItem('quizState', JSON.stringify(quizState));
 
-        // Store original dimensions using computed styles
-        if (!container.dataset.originalWidth) {
-            const style = getComputedStyle(container);
-            container.dataset.originalWidth = style.width;
-            container.dataset.originalHeight = style.height;
-            container.dataset.originalPosition = style.position;
-            container.dataset.originalTop = style.top;
-            container.dataset.originalLeft = style.left;
-        }
+        // Open in new tab
+        chrome.tabs.create({
+            url: chrome.runtime.getURL('popup.html#maximized'),
+            active: true
+        });
 
-        if (container.classList.contains('maximized')) {
-            // Restore original styles from dataset
-            container.classList.remove('maximized');
-            document.body.classList.remove('body-maximized');
-
-            // Reset to original positioning
-            container.style.position = container.dataset.originalPosition;
-            container.style.top = container.dataset.originalTop;
-            container.style.left = container.dataset.originalLeft;
-            container.style.width = container.dataset.originalWidth;
-            container.style.height = container.dataset.originalHeight;
-        } else {
-            // Maximize using CSS class only
-            container.classList.add('maximized');
-            document.body.classList.add('body-maximized');
-
-            // Clear any conflicting inline styles
-            container.style.position = '';
-            container.style.top = '';
-            container.style.left = '';
-            container.style.width = '';
-            container.style.height = '';
-        }
+        // Close the popup
+        window.close();
     }
 
     refreshBtn.addEventListener('click', async () => {

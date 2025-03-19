@@ -814,3 +814,19 @@ code[class*="language-"] {
   }
 }
 
+/* Add media query for maximized view */
+@media (min-width: 768px) {
+    #container {
+        padding: 30px;
+    }
+
+    .question {
+        width: 48%;
+        margin: 1%;
+        float: left;
+    }
+
+    .diagram {
+        min-height: 300px;
+    }
+}

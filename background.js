@@ -68,36 +68,28 @@ Key requirements:
 
 For Mermaid Diagrams STRICTLY REQUIRE:
 - Use ONLY official syntax from Mermaid v11.5.0
-- No special characters in node labels like ()[]{}
-- Escape special characters with double quotes
-- Proper indentation and line breaks
-- Explicit arrow syntax (--> not -- >)
-- No hanging connections
-- Explicitly complete all paths
-- Valid flow structure
-- Always wrap node labels in double quotes
-- Escape special characters: () -> &#40;&#41;, {} -> &#123;&#125;
-- Use full arrows (--> not - or ->)
-- Example format:
+- Wrap ALL node labels in double quotes: ["Label"]
+- Allow special characters (){} INSIDE quoted labels
+- Use explicit arrow syntax: --> with no spaces
+- Maintain proper indentation (4 spaces per level)
+- Ensure all paths are fully connected
+- Follow this exact structure:
 graph TD
-    A["Start"] --> B["Process&#40;input&#41;"]
+    A["Start"] --> B["Process(input)"]
     B --> C{"Decision?"}
     C -->|Yes| D["Success"]
     C -->|No| E["Retry"]
 
-BAD EXAMPLES:
+STRICTLY PROHIBITED:
+- Unquoted labels with special characters: [Process()]
+- Spaced arrows: -- > instead of -->
+- Incomplete paths
+- HTML entities like &amp; or &#40;
+- Hanging connections
+- These patterns:
 graph TD
-        A[Start]-- > B[Process]-- > C[End]
-graph TD
-    A[Start] - > B[Process]
-    B - C{Decision(mobile?)}
-
-GOOD EXAMPLE:
-graph TD
-    A[Start] --> B[Process]
-    B --> C{Decision}
-    C -->|Yes| D[End]
-    C -->|No| B
+    A[Start]-- > B[Process]  # Bad spacing
+    X[Unclosed label --> Y
 
 Ensure valid JSON syntax and proper escaping. Generate exactly ${count} items.`;
 
