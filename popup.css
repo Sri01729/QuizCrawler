@@ -1077,3 +1077,45 @@ code[class*="language-"] {
         opacity: 0.7;
       }
     }
+
+.rating-dialog {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stars {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    font-size: 24px;
+}
+
+.star {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.star:hover, .star.active {
+    color: #ffd700;
+}
+
+.rating-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.rating-buttons button {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.skip-rating {
+    background-color: #6b7280 !important;
+}

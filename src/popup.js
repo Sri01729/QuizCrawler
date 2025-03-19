@@ -28,6 +28,9 @@ mermaid.initialize({
 
 let questions = []; // Global variable to hold quiz data
 
+// Add this variable at the top of your file to track authentication state
+let isAuthenticating = false;
+
 // Helper function to detect language from code snippet
 function detectLanguage(code) {
     // Simple detection - can be improved
@@ -500,29 +503,163 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout functionality
     document.getElementById('logoutBtn').addEventListener('click', logout);
 
-    // Update login status when popup opens
-    updateLoginStatus();
+    // Initial login status check
+    chrome.storage.local.get('jwt', (result) => {
+        if (result.jwt) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-ui').style.display = 'none';
+        }
+    });
 
-    // Update login status after login/logout
+    function showRatingDialog() {
+        const mainUI = document.getElementById('main-ui');
+        mainUI.innerHTML = `
+            <div class="rating-dialog">
+                <h3>Rate your experience</h3>
+                <p>How was your Quiz Crawler experience?</p>
+                <div class="stars">
+                    ${Array(5).fill('&#9733;').map((star, i) =>
+                        `<span class="star" data-rating="${i + 1}">${star}</span>`
+                    ).join('')}
+                </div>
+                <div class="rating-buttons">
+                    <button id="submit-rating" class="btn" disabled>Submit</button>
+                    <button class="btn skip-rating">Skip</button>
+                </div>
+            </div>
+        `;
+
+        // Add star rating functionality
+        const stars = mainUI.querySelectorAll('.star');
+        const submitBtn = mainUI.querySelector('#submit-rating');
+        let selectedRating = 0;
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.rating);
+                stars.forEach((s, i) => {
+                    s.classList.toggle('active', i < selectedRating);
+                });
+                submitBtn.disabled = false;
+            });
+
+            star.addEventListener('mouseover', () => {
+                const rating = parseInt(star.dataset.rating);
+                stars.forEach((s, i) => {
+                    s.style.color = i < rating ? '#ffd700' : '#ddd';
+                });
+            });
+        });
+
+        // Reset stars on mouse leave
+        const starsContainer = mainUI.querySelector('.stars');
+        starsContainer.addEventListener('mouseleave', () => {
+            stars.forEach((s, i) => {
+                s.style.color = i < selectedRating ? '#ffd700' : '#ddd';
+            });
+        });
+
+        // Handle rating submission
+        submitBtn.addEventListener('click', async () => {
+            try {
+                const jwt = await getStoredJWT();
+
+                // Send rating to backend
+                const response = await fetch('http://localhost:3000/api/submit-rating', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwt}`
+                    },
+                    body: JSON.stringify({ rating: selectedRating })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit rating');
+                }
+
+                console.log('Rating submitted:', selectedRating);
+                completeLogout(true);
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                completeLogout(true); // Still logout even if rating submission fails
+            }
+        });
+
+        // Handle skip
+        mainUI.querySelector('.skip-rating').addEventListener('click', () => {
+            completeLogout(true);
+        });
+    }
+
+    function completeLogout(fromRating = false) {
+        if (fromRating) {
+            chrome.identity.clearAllCachedAuthTokens(() => {
+                chrome.storage.local.clear(() => {  // Clear all storage instead of just JWT
+                    // Force reload the popup to get a fresh state
+                    window.location.reload();
+                });
+            });
+        }
+    }
+
+    function showLoginScreen() {
+        const loginScreen = document.getElementById('login-screen');
+        const mainUI = document.getElementById('main-ui');
+
+        // Reset login screen
+        loginScreen.innerHTML = `
+            <div>
+                <h1 class="title">Welcome to Quiz Crawler</h1>
+                <p class="subtitle">Sign in to continue to your account</p>
+            </div>
+            <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
+                <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    <path fill="none" d="M0 0h48v48H0z"/>
+                </svg>
+                <span class="btn-text">Sign in with Google</span>
+            </button>`;
+
+        // Show login screen and hide main UI
+        loginScreen.style.display = 'flex';
+        mainUI.style.display = 'none';
+
+        // Remove old event listeners by cloning and replacing the button
+        const oldLoginBtn = document.getElementById('loginBtn');
+        const newLoginBtn = oldLoginBtn.cloneNode(true);
+        oldLoginBtn.parentNode.replaceChild(newLoginBtn, oldLoginBtn);
+
+        // Add new event listener
+        newLoginBtn.addEventListener('click', login);
+    }
+
     function login() {
         chrome.identity.getAuthToken({ interactive: true }, function(token) {
             if (chrome.runtime.lastError) {
                 console.error('Chrome identity error:', chrome.runtime.lastError);
                 const loginScreen = document.getElementById('login-screen');
-                loginScreen.innerHTML = `
-                    <button id="loginBtn" class="google-btn">
-                        <div class="google-icon-wrapper">
-                            <img class="google-icon" src="data:image/svg+xml;base64,...">
-                        </div>
-                        <span class="btn-text">Login with Google</span>
-                    </button>
-                    <div class="error">Login failed: ${chrome.runtime.lastError.message}</div>`;
+                loginScreen.innerHTML += `<div class="error">Login failed: ${chrome.runtime.lastError.message}</div>`;
                 return;
             }
 
             // Show loading state
             const loginScreen = document.getElementById('login-screen');
-            loginScreen.innerHTML = '<div class="loading">Logging in...</div>';
+            loginScreen.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-text">Logging in...</div>
+                    <div class="loading-spinner">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                </div>`;
 
             fetch('http://localhost:3000/api/auth/google', {
                 method: 'POST',
@@ -534,59 +671,27 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 chrome.storage.local.set({ 'jwt': data.token }, () => {
-                    // Make sure all elements exist before changing display
                     const loginScreen = document.getElementById('login-screen');
                     const mainUI = document.getElementById('main-ui');
-                    const configWrapper = document.querySelector('.config-wrapper');
-                    const quizContainer = document.getElementById('quiz-container');
 
-                    if (loginScreen) loginScreen.style.display = 'none';
-                    if (mainUI) {
-                        mainUI.style.display = 'block';
-                        // Make sure internal elements are visible
-                        if (configWrapper) configWrapper.style.display = 'block';
-                        if (quizContainer) quizContainer.style.display = 'block';
-                    }
-
-                    updateLoginStatus();
-
-                    // Optional: Show success message in quiz container
-                    if (quizContainer) {
-                        quizContainer.innerHTML = '<div class="success">Login successful! Ready to generate quiz.</div>';
-                    }
+                    loginScreen.style.display = 'none';
+                    mainUI.style.display = 'block';
                 });
             })
             .catch(err => {
                 console.error('Auth error:', err);
-                const loginScreen = document.getElementById('login-screen');
-                loginScreen.innerHTML = `<div class="error">Login failed: ${err.message}</div>`;
+                showLoginScreen(); // Show login screen again on error
             });
         });
     }
 
     function logout() {
-        chrome.identity.clearAllCachedAuthTokens(() => {
-            chrome.storage.local.remove('jwt', () => {
-                // Reset login screen to show login button
-                const loginScreen = document.getElementById('login-screen');
-                loginScreen.innerHTML = `
-                    <button id="loginBtn" class="google-btn">
-                        <div class="google-icon-wrapper">
-                            <img class="google-icon" src="data:image/svg+xml;base64,...">
-                        </div>
-                        <span class="btn-text">Login with Google</span>
-                    </button>`;
+        const mainUI = document.getElementById('main-ui');
+        mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
 
-                // Show login screen and hide main UI
-                loginScreen.style.display = 'flex';
-                document.getElementById('main-ui').style.display = 'none';
-
-                // Reattach login button event listener
-                document.getElementById('loginBtn').addEventListener('click', login);
-
-                updateLoginStatus();
-            });
-        });
+        setTimeout(() => {
+            showRatingDialog();
+        }, 500);
     }
 
     // Helper to get stored JWT
@@ -606,29 +711,6 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: {
                 ...options.headers,
                 'Authorization': `Bearer ${jwt}`
-            }
-        });
-    }
-
-    // Add login status indicator
-    function updateLoginStatus() {
-        getStoredJWT().then(jwt => {
-            const loginScreen = document.getElementById('login-screen');
-            const mainUI = document.getElementById('main-ui');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            if (jwt) {
-                loginScreen.style.display = 'none';
-                mainUI.style.display = 'block';
-                if (logoutBtn) {
-                    logoutBtn.style.display = 'inline-flex'; // Make sure logout button is visible
-                }
-            } else {
-                loginScreen.style.display = 'flex';
-                mainUI.style.display = 'none';
-                if (logoutBtn) {
-                    logoutBtn.style.display = 'none';
-                }
             }
         });
     }

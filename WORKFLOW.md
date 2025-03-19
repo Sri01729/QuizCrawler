@@ -155,6 +155,8 @@ function login() {
 }
 
 function logout() {
+  const mainUI = document.getElementById('main-ui');
+  mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
   chrome.identity.clearAllCachedAuthTokens(() => {
     chrome.storage.local.remove('jwt', () => {
       updateLoginStatus();
@@ -199,3 +201,44 @@ Common issues and solutions:
 - Regular JWT token rotation
 - Secure database connection
 - Input validation and sanitization
+
+## Recent Authentication Flow Issues and Solutions
+
+### Problem 1: Login/Logout Message Issues
+- **Issue**: When clicking logout, no loading message was shown
+- **Solution**: Added loading message with animation during logout process
+```javascript
+function logout() {
+    const mainUI = document.getElementById('main-ui');
+    mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
+    // ... rest of logout logic
+}
+```
+
+### Problem 2: Login/Logout State Loop
+- **Issue**: After logging out and trying to log in again, the app got stuck in a loop between login and rating screens
+- **Initial Attempts**:
+  - Adding state management flags (didn't work)
+  - Cleaning up event listeners (didn't work)
+  - Restructuring the auth flow (didn't work)
+- **Working Solution**: Force complete state reset after logout
+```javascript
+function completeLogout(fromRating = false) {
+    if (fromRating) {
+        chrome.identity.clearAllCachedAuthTokens(() => {
+            chrome.storage.local.clear(() => {
+                window.location.reload(); // Force complete refresh
+            });
+        });
+    }
+}
+```
+
+### Problem 3: Rating Dialog Implementation
+- **Feature**: Added user feedback collection before logout
+- **Implementation**:
+  1. Show loading message
+  2. Display rating dialog with 5 stars
+  3. Allow skip option
+  4. Complete logout after rating/skip
+  5. Force state reset for clean login screen

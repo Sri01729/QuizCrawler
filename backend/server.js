@@ -229,6 +229,25 @@ app.post('/api/auth/logout', async (req, res) => {
   }
 });
 
+// Rating submission endpoint
+app.post('/api/submit-rating', authenticateToken, async (req, res) => {
+    try {
+        const { rating } = req.body;
+        const userId = req.user.user_id;
+
+        // Update the users table with the rating
+        await pool.query(
+            'UPDATE users SET rating = $1 WHERE id = $2',
+            [rating, userId]
+        );
+
+        res.json({ message: 'Rating submitted successfully' });
+    } catch (error) {
+        console.error('Error saving rating:', error);
+        res.status(500).json({ error: 'Failed to save rating' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
