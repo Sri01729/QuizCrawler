@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
     const toggleConfigBtn = document.getElementById('toggle-config');
     const configWrapper = document.querySelector('.config-wrapper');
-    const refreshBtn = document.getElementById('refresh-btn');
     // const maximizeBtn = document.getElementById('maximize-btn');
 
     // Check if opened in maximized mode
@@ -105,18 +104,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    refreshBtn.addEventListener('click', async () => {
-        try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab && tab.id) {
-                chrome.tabs.reload(tab.id);
-            } else {
-                console.error('No active tab found.');
-            }
-        } catch (error) {
-            console.error('Error refreshing the page:', error);
-        }
-    });
+    // refreshBtn.addEventListener('click', async () => {
+    //     try {
+    //         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    //         if (tab && tab.id) {
+    //             chrome.tabs.reload(tab.id);
+    //         } else {
+    //             console.error('No active tab found.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error refreshing the page:', error);
+    //     }
+    // });
 
 
     toggleConfigBtn.addEventListener('click', function () {
@@ -351,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="circle"></div>
             <div class="circle"></div>
             <div class="circle"></div>
-           <div class="loading-brain"></div>
+            <div class="loading-brain"></div>
             <div class="loading-brain"></div>
             <div class="loading-brain"></div>
             <div class="loading-brain"></div>
@@ -608,91 +607,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function login() {
+        chrome.identity.getAuthToken({ interactive: true }, function(token) {
+            if (chrome.runtime.lastError) {
+                console.error('Chrome identity error:', chrome.runtime.lastError);
                 const loginScreen = document.getElementById('login-screen');
+                loginScreen.innerHTML += `<div class="error">Login failed: ${chrome.runtime.lastError.message}</div>`;
+                return;
+            }
 
             // Show loading state
-        loginScreen.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-text">Logging in...</div>
-                <div class="loading-spinner">
-                    <div class="circle"></div>
-                    <div class="circle"></div>
-                    <div class="circle"></div>
-                 <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-          </div>
-          <div class="loading-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-          </div>
-        </div>`;
+            const loginScreen = document.getElementById('login-screen');
+            loginScreen.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-text">Logging in...</div>
+                    <div class="loading-spinner">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                </div>`;
 
-        chrome.identity.getAuthToken({ interactive: true }, async function(token) {
-            try {
-                if (chrome.runtime.lastError) {
-                    throw new Error(chrome.runtime.lastError.message);
-                }
-
-                console.log('Got token:', token); // Debug log
-
-                const response = await fetch('http://localhost:3000/api/auth/google', {
+            fetch('http://localhost:3000/api/auth/google', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ token })
-                });
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
 
-                console.log('Server response status:', response.status); // Debug log
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Server error');
-                }
-
-                const data = await response.json();
-
-                if (!data.token) {
-                    throw new Error('No token received from server');
-                }
-
-                chrome.storage.local.set({ 'jwt': data.token }, () => {
+                // Store both JWT and profile picture URL
+                chrome.storage.local.set({
+                    'jwt': data.token,
+                    'profilePic': data.picture  // Make sure your server sends this
+                }, () => {
                     const loginScreen = document.getElementById('login-screen');
                     const mainUI = document.getElementById('main-ui');
 
                     loginScreen.style.display = 'none';
-                        mainUI.style.display = 'block';
+                    mainUI.style.display = 'block';
+
+                    // Set profile picture
+                    const profilePic = document.getElementById('profile-pic');
+                    if (profilePic && data.picture) {
+                        profilePic.src = data.picture;
+                    }
                 });
+            })
+            .catch(err => {
+                console.error('Auth error:', err);
+                loginScreen.innerHTML = `<div class="error">Login failed: ${err.message}</div>`;
+            });
+        });
+    }
 
-            } catch (error) {
-                console.error('Login error:', error); // Debug log
-
-                // Reset login screen with error message
-                loginScreen.innerHTML = `
-                    <div>
-                        <h1 class="title">Welcome to Quiz Crawler</h1>
-                        <p class="subtitle">Sign in to continue to your account</p>
-                    </div>
-                    <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
-                        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                            <path fill="none" d="M0 0h48v48H0z"/>
-                        </svg>
-                        <span class="btn-text">Sign in with Google</span>
-                    </button>
-                    <div class="error">Login failed: ${error.message}</div>`;
-
-                // Reattach login event listener
-                document.getElementById('loginBtn').addEventListener('click', login);
+    // Add this function to update profile picture on load
+    function updateProfilePicture() {
+        chrome.storage.local.get('profilePic', (data) => {
+            const profilePic = document.getElementById('profile-pic');
+            if (profilePic && data.profilePic) {
+                profilePic.src = data.profilePic;
             }
         });
     }
+
+    // Call this in your DOMContentLoaded event
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... other initialization code ...
+        updateProfilePicture();
+    });
 
     async function checkUserRating() {
         try {

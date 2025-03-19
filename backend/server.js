@@ -180,52 +180,33 @@ Ensure valid JSON syntax and proper escaping. Generate exactly ${count} items.`;
 });
 
 app.post('/api/auth/google', async (req, res) => {
-  try {
-    const { token } = req.body;
-    console.log('Received token request:', token ? 'Token present' : 'No token'); // Debug log
+    try {
+        const { token } = req.body;
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-    if (!token) {
-      console.error('No token provided');
-      return res.status(400).json({ error: 'No token provided' });
+        const { email, name, picture } = await response.json();
+
+        const result = await pool.query(
+            'INSERT INTO users (email, name, picture) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET name = $2, picture = $3 RETURNING id',
+            [email, name, picture]
+        );
+
+        const jwt_token = jwt.sign(
+            { user_id: result.rows[0].id, email },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            token: jwt_token,
+            picture: picture  // Include profile picture URL in response
+        });
+    } catch (error) {
+        console.error('Auth error:', error);
+        res.status(500).json({ error: error.message });
     }
-
-    console.log('Verifying token with Google...'); // Debug log
-    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      console.error('Google API error:', response.status); // Debug log
-      throw new Error('Failed to get user info from Google');
-    }
-
-    const { email, name, picture } = await response.json();
-    console.log('User info received:', { email, name }); // Debug log
-
-    // Create or update user in database
-    console.log('Updating database...'); // Debug log
-    const result = await pool.query(
-      'INSERT INTO users (email, name, picture) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET name = $2, picture = $3 RETURNING id',
-      [email, name, picture]
-    );
-
-    // Generate JWT
-    console.log('Generating JWT...'); // Debug log
-    const jwt_token = jwt.sign(
-      { user_id: result.rows[0].id, email },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    console.log('Auth successful for user:', email); // Debug log
-    res.json({ token: jwt_token });
-  } catch (error) {
-    console.error('Auth error:', error); // Debug log
-    res.status(500).json({
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-  }
 });
 
 // Add a new logout endpoint

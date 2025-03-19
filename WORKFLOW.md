@@ -410,3 +410,33 @@ async function logout() {
 - Use proper character encoding for special characters
 - Consider user flow and prevent duplicate actions
 - Add appropriate error handling for API calls
+
+### Feature: Auto-Reload with Sidebar
+**Problem Description:**
+- Need fresh page content when opening sidebar
+- Current implementation doesn't reload page
+
+**Solution:**
+```javascript
+chrome.action.onClicked.addListener(async (tab) => {
+    await chrome.tabs.reload(tab.id);
+    setTimeout(() => {
+        chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
+    }, 1000);
+});
+```
+
+**Changes Made:**
+- Added page reload before sidebar display
+- Added delay to ensure page loads
+- Maintained sidebar toggle functionality
+
+**Side Effects:**
++ Fresh content on each extension open
++ More reliable content extraction
++ Better user experience
+
+**Notes:**
+- 1 second delay ensures page is loaded
+- Reload happens before sidebar shows
+- Maintains existing functionality
