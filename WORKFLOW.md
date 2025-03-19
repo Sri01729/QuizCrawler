@@ -242,3 +242,136 @@ function completeLogout(fromRating = false) {
   3. Allow skip option
   4. Complete logout after rating/skip
   5. Force state reset for clean login screen
+```
+
+# Authentication and User Experience Issues
+
+## Login/Logout Flow Issues
+
+### Problem 1: Login/Logout Message Display
+**Problem Description:**
+- No loading messages shown during logout process
+- Poor user feedback during authentication state changes
+
+**Attempted Solutions:**
+1. Added simple text messages (insufficient feedback)
+2. Tried direct state changes (caused flickering)
+
+**Working Solution:**
+Added animated loading container with clear status messages
+```javascript
+function logout() {
+    const mainUI = document.getElementById('main-ui');
+    mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
+    // ... rest of logout logic
+}
+```
+
+### Problem 2: Authentication State Loop
+**Problem Description:**
+- After logout and attempting login again, app got stuck in infinite loop between login and rating screens
+- State management issues causing repeated redirects
+
+**Attempted Solutions:**
+1. Added state management flags (didn't resolve loop)
+2. Cleaned up event listeners (still had state persistence issues)
+3. Restructured auth flow (loop persisted)
+
+**Working Solution:**
+Force complete state reset after logout using storage clear and page reload
+```javascript
+function completeLogout(fromRating = false) {
+    if (fromRating) {
+        chrome.identity.clearAllCachedAuthTokens(() => {
+            chrome.storage.local.clear(() => {
+                window.location.reload(); // Force complete refresh
+            });
+        });
+    }
+}
+```
+
+**Side Effects:**
+- All stored data is cleared on logout
+- Fresh state on next login
+
+## Rating System Implementation
+
+### Problem 1: Star Character Rendering
+**Problem Description:**
+- Star characters (★) displaying as ASCII characters instead of proper stars
+
+**Attempted Solution:**
+Using direct ASCII star character
+```javascript
+${Array(5).fill('★').map((star, i) => ...)}
+```
+
+**Working Solution:**
+Used HTML entity for consistent rendering across browsers
+```javascript
+${Array(5).fill('&#9733;').map((star, i) =>
+    `<span class="star" data-rating="${i + 1}">${star}</span>`
+).join('')}
+```
+
+### Problem 2: Rating Persistence
+**Problem Description:**
+- Needed to store user ratings in database
+- No way to track if user had already rated
+
+**Solution:**
+1. Added rating column to users table
+2. Created new API endpoint for rating submission
+```javascript
+app.post('/api/submit-rating', authenticateToken, async (req, res) => {
+    try {
+        const { rating } = req.body;
+        const userId = req.user.user_id;
+        await pool.query(
+            'UPDATE users SET rating = $1 WHERE id = $2',
+            [rating, userId]
+        );
+        res.json({ message: 'Rating submitted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save rating' });
+    }
+});
+```
+
+### Problem 3: Duplicate Rating Prevention
+**Problem Description:**
+- Users could submit ratings multiple times
+- No differentiation between rated and unrated users during logout
+
+**Solution:**
+1. Added rating check endpoint
+2. Implemented conditional goodbye/rating messages
+```javascript
+async function logout() {
+    const mainUI = document.getElementById('main-ui');
+    mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
+
+    const hasRating = await checkUserRating();
+
+    setTimeout(() => {
+        if (hasRating) {
+            showGoodbyeMessage();
+        } else {
+            showRatingDialog();
+        }
+    }, 500);
+}
+```
+
+**Side Effects:**
+- Additional API call during logout process
+- Slight delay in logout flow to check rating status
+- Better user experience with personalized goodbye messages
+
+## Notes
+- Always maintain loading states for better UX
+- Clear all states when authentication changes
+- Use proper character encoding for special characters
+- Consider user flow and prevent duplicate actions
+- Add appropriate error handling for API calls

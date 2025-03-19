@@ -1079,11 +1079,37 @@ code[class*="language-"] {
     }
 
 .rating-dialog {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.rating-dialog h3 {
+    margin-bottom: 15px;
+    color: #374151;
+    font-size: 1.5em;
+}
+
+.rating-dialog p {
+    color: #6B7280;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+/* Add animation for goodbye message */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rating-dialog {
+    animation: fadeInUp 0.5s ease-out;
 }
 
 .stars {

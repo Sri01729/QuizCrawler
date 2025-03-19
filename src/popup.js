@@ -685,12 +685,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function logout() {
+    async function checkUserRating() {
+        try {
+            const jwt = await getStoredJWT();
+            const response = await fetch('http://localhost:3000/api/check-rating', {
+                headers: {
+                    'Authorization': `Bearer ${jwt}`
+                }
+            });
+            const data = await response.json();
+            return data.hasRating;
+        } catch (error) {
+            console.error('Error checking rating:', error);
+            return false;
+        }
+    }
+
+    function showGoodbyeMessage() {
+        const mainUI = document.getElementById('main-ui');
+        mainUI.innerHTML = `
+            <div class="rating-dialog">
+                <h3>Thanks for using Quiz Crawler!</h3>
+                <p>Hope to see you again soon. Have a great day! 👋</p>
+                <div class="rating-buttons">
+                    <button class="btn" onclick="completeLogout(true)">Close</button>
+                </div>
+            </div>
+        `;
+    }
+
+    async function logout() {
+        // Show loading message first
         const mainUI = document.getElementById('main-ui');
         mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
 
+        // Check if user has already rated
+        const hasRating = await checkUserRating();
+
         setTimeout(() => {
-            showRatingDialog();
+            if (hasRating) {
+                showGoodbyeMessage();
+            } else {
+                showRatingDialog();
+            }
         }, 500);
     }
 

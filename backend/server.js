@@ -248,6 +248,24 @@ app.post('/api/submit-rating', authenticateToken, async (req, res) => {
     }
 });
 
+// Add this new endpoint to check if user has already rated
+app.get('/api/check-rating', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+
+        const result = await pool.query(
+            'SELECT rating FROM users WHERE id = $1',
+            [userId]
+        );
+
+        const hasRating = result.rows[0]?.rating != null;
+        res.json({ hasRating });
+    } catch (error) {
+        console.error('Error checking rating:', error);
+        res.status(500).json({ error: 'Failed to check rating status' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
