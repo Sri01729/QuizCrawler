@@ -22,11 +22,14 @@ mermaid.initialize({
         htmlLabels: true, // Better compatibility
         curve: 'linear'
     },
-    theme: 'forest',
+    theme: 'default',
     logLevel: 0 // Enable error logging
 });
 
 let questions = []; // Global variable to hold quiz data
+
+// Add this variable at the top of your file to track authentication state
+let isAuthenticating = false;
 
 // Helper function to detect language from code snippet
 function detectLanguage(code) {
@@ -70,82 +73,67 @@ function isCorrectAnswer(optionText, answerText) {
     return cleanOption === cleanAnswer;
 }
 
-
+// Add this new function to create the welcome message
+function createWelcomeMessage() {
+    return `
+        <div class="welcome-message">
+            <div class="icon-wrapper">
+                <div class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="title">Welcome to Quiz Crawler</h2>
+            <p class="description">Need quizzes? We&#39;ve got &#39;em! Quiz Crawler serves up fresh questions and answers faster than a caffeinated coder. Browse, click, and boom&mdash;your HTML page is now quiz-tastic!</p>
+            <button class="cta-button">Generate Quiz</button>
+        </div>
+    `;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
     const toggleConfigBtn = document.getElementById('toggle-config');
     const configWrapper = document.querySelector('.config-wrapper');
-    const refreshBtn = document.getElementById('refresh-btn');
-    const minimizeBtn = document.getElementById('minimize-btn');
-    const maximizeBtn = document.getElementById('maximize-btn');
-    maximizeBtn.addEventListener('click', toggleMaximize);
+    // const maximizeBtn = document.getElementById('maximize-btn');
 
-
-    // Toggle minimize/restore function
-    function toggleMinimize() {
-        const container = document.getElementById('container');
-        if (!container.classList.contains('minimized')) {
-            container.dataset.fullHeight = container.style.height || container.offsetHeight + 'px';
-            container.classList.add('minimized');
-            container.style.height = '60px'; // Set minimized height
-        } else {
-            container.classList.remove('minimized');
-            container.style.height = container.dataset.fullHeight || '500px'; // Restore previous height
+    // Check if opened in maximized mode
+    if (window.location.hash === '#maximized') {
+        const savedState = localStorage.getItem('quizState');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            questions = state.questions;
+            quizContainer.innerHTML = state.html;
+            rebindEventListeners();
         }
     }
 
-    function toggleMaximize() {
-        const container = document.getElementById('container');
+    function rebindEventListeners() {
+        // Re-attach all event listeners (your existing displayQuiz handlers)
+        quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
+            button.addEventListener('click', handleAnswerToggle);
+        });
 
-        // Store original dimensions using computed styles
-        if (!container.dataset.originalWidth) {
-            const style = getComputedStyle(container);
-            container.dataset.originalWidth = style.width;
-            container.dataset.originalHeight = style.height;
-            container.dataset.originalPosition = style.position;
-            container.dataset.originalTop = style.top;
-            container.dataset.originalLeft = style.left;
-        }
-
-        if (container.classList.contains('maximized')) {
-            // Restore original styles from dataset
-            container.classList.remove('maximized');
-            document.body.classList.remove('body-maximized');
-
-            // Reset to original positioning
-            container.style.position = container.dataset.originalPosition;
-            container.style.top = container.dataset.originalTop;
-            container.style.left = container.dataset.originalLeft;
-            container.style.width = container.dataset.originalWidth;
-            container.style.height = container.dataset.originalHeight;
-        } else {
-            // Maximize using CSS class only
-            container.classList.add('maximized');
-            document.body.classList.add('body-maximized');
-
-            // Clear any conflicting inline styles
-            container.style.position = '';
-            container.style.top = '';
-            container.style.left = '';
-            container.style.width = '';
-            container.style.height = '';
-        }
+        quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
+            button.addEventListener('click', handleDiagramToggle);
+        });
     }
 
-    refreshBtn.addEventListener('click', async () => {
-        try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab && tab.id) {
-                chrome.tabs.reload(tab.id);
-            } else {
-                console.error('No active tab found.');
-            }
-        } catch (error) {
-            console.error('Error refreshing the page:', error);
-        }
-    });
-    minimizeBtn.addEventListener('click', toggleMinimize);
+
+    // refreshBtn.addEventListener('click', async () => {
+    //     try {
+    //         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    //         if (tab && tab.id) {
+    //             chrome.tabs.reload(tab.id);
+    //         } else {
+    //             console.error('No active tab found.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error refreshing the page:', error);
+    //     }
+    // });
+
 
     toggleConfigBtn.addEventListener('click', function () {
         configWrapper.classList.toggle('collapsed');
@@ -232,7 +220,15 @@ document.addEventListener('DOMContentLoaded', () => {
             questions = questions.filter(q => q.diagram);
         }
 
-        quizContainer.innerHTML = questions.map((q, i) => `
+        quizContainer.innerHTML = questions.map((q, i) => {
+            // Only include diagram section if diagram exists AND is valid
+            const diagramSection = q.diagram ? `
+                <div class="diagram" style="display: none;"
+                     data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+                <button class="toggle-diagram">Show Diagram</button>
+            ` : '';
+
+            return `
             <div class="question">
                 <h3>Question ${i + 1}</h3>
                 <p>${q.question}</p>
@@ -242,14 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
                 `).join('') : ''}
                 <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
-                ${q.diagram ? `
-                    <div class="diagram" style="display: none;"
-                         data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
-                    <button class="toggle-diagram">Show Diagram</button>
-                ` : ''}
+                    ${diagramSection}
                 ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Apply syntax highlighting to any pre/code blocks that might be in the initial view
         Prism.highlightAllUnder(quizContainer);
@@ -295,17 +288,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Toggle Diagram functionality with improved error handling
         quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
-            // In your diagram toggle event listener:
-            button.addEventListener('click', function () {
+            button.addEventListener('click', function() {
                 const diagramDiv = this.parentElement.querySelector('.diagram');
                 if (diagramDiv.style.display === 'none') {
                     diagramDiv.style.display = 'block';
                     this.textContent = 'Hide Diagram';
 
-                    const rawCode = diagramDiv.dataset.diagramCode;
-                    const diagramCode = sanitizeMermaidCode(rawCode);
-
-                    renderMermaidDiagram(diagramDiv, diagramCode);
+                    try {
+                        const diagramCode = diagramDiv.dataset.diagramCode;
+                        mermaid.render(`mermaid-${Date.now()}`, diagramCode)
+                            .then(({ svg }) => {
+                                diagramDiv.innerHTML = svg;
+                            })
+                            .catch(error => {
+                                // If diagram fails, hide the diagram section
+                                diagramDiv.style.display = 'none';
+                                this.style.display = 'none';
+                            });
+                    } catch (error) {
+                        // If diagram fails, hide the diagram section
+                        diagramDiv.style.display = 'none';
+                        this.style.display = 'none';
+                    }
                 } else {
                     diagramDiv.style.display = 'none';
                     this.textContent = 'Show Diagram';
@@ -318,81 +322,93 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Attempt to load any saved quiz when the popup opens
-    chrome.storage.local.get('lastQuiz', (data) => {
+    chrome.storage.local.get(['lastQuiz', 'jwt'], (data) => {
+        // First check if the user is logged in
+        if (data.jwt) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+
+            // If there's a saved quiz, display it
         if (data.lastQuiz && data.lastQuiz.quizHTML) {
             quizContainer.innerHTML = data.lastQuiz.quizHTML;
             questions = data.lastQuiz.questions;
 
-            // Rebind "toggle-answer" functionality
-            quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
-                button.addEventListener('click', function () {
-                    const answerDiv = this.parentElement.querySelector('.answer');
-                    if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
-                        answerDiv.style.display = 'block';
-                        this.textContent = 'Hide Answer';
-                        // Apply syntax highlighting when answer becomes visible
-                        Prism.highlightAllUnder(answerDiv);
+                // Rebind event listeners...
+                // ... (existing rebinding code) ...
                     } else {
-                        answerDiv.style.display = 'none';
-                        this.textContent = 'Show Answer';
-                    }
-                });
-            });
+                // No saved quiz, show welcome message
+                quizContainer.innerHTML = createWelcomeMessage();
 
-            // Rebind "toggle-diagram" functionality
-            quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
-                button.addEventListener('click', function () {
-                    const diagramDiv = this.parentElement.querySelector('.diagram');
-                    if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
-                        diagramDiv.style.display = 'block';
-                        this.textContent = 'Hide Diagram';
+                // Add click handler for the Generate Quiz button
+                const ctaButton = quizContainer.querySelector('.cta-button');
+                if (ctaButton) {
+                    ctaButton.addEventListener('click', () => {
+                        // Disable the button
+                        ctaButton.disabled = true;
+                        ctaButton.textContent = "Generating...";
+                        ctaButton.style.opacity = "0.7";
 
-                        // Get diagram code and render it
-                        const diagramCode = diagramDiv.getAttribute('data-diagram-code');
-                        if (diagramCode) {
-                            renderMermaidDiagram(diagramDiv, diagramCode);
+                        // Trigger the generate button
+                        const generateBtn = document.getElementById('generate-btn');
+                        generateBtn.click();
+                    });
+                }
                         }
                     } else {
-                        diagramDiv.style.display = 'none';
-                        this.textContent = 'Show Diagram';
-                    }
-                });
-            });
+            // User is not logged in
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-ui').style.display = 'none';
         }
     });
 
-    // Event listener for the Generate Quiz button
+    // Update the Generate Quiz button event listener
     document.getElementById('generate-btn').addEventListener('click', async () => {
         try {
-            // Display loading animation
+            // Get the button element
+            const generateBtn = document.getElementById('generate-btn');
+
+            // Disable the button and change text to show loading
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Generating...";
+            generateBtn.style.opacity = "0.7"; // Visual feedback that it's disabled
+
+            // First check if we have a JWT
+            const jwt = await getStoredJWT();
+            if (!jwt) {
+                quizContainer.innerHTML = '<div class="error">Please login first</div>';
+
+                // Re-enable the button
+                generateBtn.disabled = false;
+                generateBtn.textContent = "Generate Quiz";
+                generateBtn.style.opacity = "1";
+                return;
+            }
+
+            // Show skeleton loading animation
             quizContainer.innerHTML = `
-        <div class="loading-container">
-          <div class="loading-text">Generating Quiz</div>
-          <div class="loading-spinner">
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
+                ${Array(3).fill().map(() => `
+                    <div class="question-container">
+                        <div class="skeleton skeleton-text short"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text medium"></div>
+                        <div class="options-container">
+                            <div class="skeleton option"></div>
+                            <div class="skeleton option"></div>
+                            <div class="skeleton option"></div>
+                            <div class="skeleton option"></div>
           </div>
-          <div class="loading-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+                        <div class="skeleton skeleton-button"></div>
           </div>
-        </div>
+                `).join('')}
       `;
 
+            // Get current tab and extract content
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
-            // Request content extraction from the content script
             const response = await chrome.tabs.sendMessage(tab.id, { action: "extractContent" });
             if (!response?.content) throw new Error('Failed to extract page content');
 
-            // Prepare payload for API call
             const payload = {
                 content: response.content.substring(0, 12000),
                 difficulty: document.getElementById('difficulty').value,
@@ -400,36 +416,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 count: document.getElementById('count').value
             };
 
-            const timeout = setTimeout(() => {
-                quizContainer.innerHTML = '<div class="error">Request timed out (30s)</div>';
-            }, 50000);
+            console.log('Sending payload:', payload); // Debug log
 
             // Send message to background script to generate the quiz
-            chrome.runtime.sendMessage({ action: "generateQuiz", payload }, (apiResponse) => {
-                clearTimeout(timeout);
-                try {
-                    if (!apiResponse) {
-                        throw new Error('Empty response from API');
-                    }
-                    const cleanedResponse = cleanApiResponse(apiResponse);
-                    const parsed = JSON.parse(cleanedResponse);
-
-                    if (parsed.error) {
-                        throw new Error(parsed.error);
-                    }
-                    if (!Array.isArray(parsed)) {
-                        throw new Error('Invalid question format received');
-                    }
-                    // Display the quiz questions
-                    displayQuiz(parsed);
-                } catch (e) {
-                    console.error('Processing Error:', e);
-                    quizContainer.innerHTML = `<div class="error">Error: ${e.message}</div>`;
-                }
+            const apiResponse = await fetch('http://localhost:3000/api/generate-quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify(payload)
             });
-        } catch (e) {
-            console.error('General Error:', e);
-            quizContainer.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+
+            console.log('API Response status:', apiResponse.status); // Debug log
+
+            if (!apiResponse.ok) {
+                const errorData = await apiResponse.json();
+                throw new Error(errorData.error || 'API request failed');
+            }
+
+            const data = await apiResponse.json();
+            console.log('API Response data:', data); // Debug log
+
+            if (!data || data.error) {
+                throw new Error(data?.error || 'Invalid response from API');
+            }
+
+                    // Display the quiz questions
+            displayQuiz(data);
+
+            // Re-enable the button after questions are displayed
+            generateBtn.disabled = false;
+            generateBtn.textContent = "Generate Quiz";
+            generateBtn.style.opacity = "1";
+
+        } catch (error) {
+            console.error('Generation Error:', error);
+            quizContainer.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+
+            // Re-enable the button on error
+            const generateBtn = document.getElementById('generate-btn');
+            generateBtn.disabled = false;
+            generateBtn.textContent = "Generate Quiz";
+            generateBtn.style.opacity = "1";
         }
     });
 
@@ -478,10 +507,615 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Clear quiz functionality
     document.getElementById('clear-btn').addEventListener('click', () => {
-        quizContainer.innerHTML = '';
+        quizContainer.innerHTML = createWelcomeMessage();
         questions = [];
         chrome.storage.local.remove('lastQuiz', () => {
-            quizContainer.innerHTML = '<div class="success">Quiz cleared!</div>';
+            // Add click handler for the Generate Quiz button
+            const ctaButton = quizContainer.querySelector('.cta-button');
+            if (ctaButton) {
+                ctaButton.addEventListener('click', () => {
+                    document.getElementById('generate-btn').click();
+                });
+            }
         });
     });
+
+    // Login functionality
+    document.getElementById('loginBtn').addEventListener('click', login);
+
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        // Prevent any default behavior
+        e.preventDefault();
+        // Set a 3-second timeout before calling the actual logout function
+        setTimeout(() => {
+            logout(); // Call the original logout function after 3 seconds
+        }, 2300); // 3000ms = 3 seconds
+    });
+
+    document.querySelectorAll('.logoutButton').forEach(button => {
+        button.state = 'default'
+
+        // function to transition a button from one state to the next
+        let updateButtonState = (button, state) => {
+            if (logoutButtonStates[state]) {
+                button.state = state
+                for (let key in logoutButtonStates[state]) {
+                    button.style.setProperty(key, logoutButtonStates[state][key])
+                }
+            }
+        }
+
+        // mouse hover listeners on button
+        button.addEventListener('mouseenter', () => {
+            if (button.state === 'default') {
+                updateButtonState(button, 'hover')
+            }
+        })
+        button.addEventListener('mouseleave', () => {
+            if (button.state === 'hover') {
+                updateButtonState(button, 'default')
+            }
+        })
+
+        // click listener on button
+        button.addEventListener('click', () => {
+            if (button.state === 'default' || button.state === 'hover') {
+                button.classList.add('clicked')
+                updateButtonState(button, 'walking1')
+                setTimeout(() => {
+                    button.classList.add('door-slammed')
+                    updateButtonState(button, 'walking2')
+                    setTimeout(() => {
+                        button.classList.add('falling')
+                        updateButtonState(button, 'falling1')
+                        setTimeout(() => {
+                            updateButtonState(button, 'falling2')
+                            setTimeout(() => {
+                                updateButtonState(button, 'falling3')
+                                setTimeout(() => {
+                                    button.classList.remove('clicked')
+                                    button.classList.remove('door-slammed')
+                                    button.classList.remove('falling')
+                                    updateButtonState(button, 'default')
+                                }, 1000)
+                            }, logoutButtonStates['falling2']['--walking-duration'])
+                        }, logoutButtonStates['falling1']['--walking-duration'])
+                    }, logoutButtonStates['walking2']['--figure-duration'])
+                }, logoutButtonStates['walking1']['--figure-duration'])
+            }
+        })
+    })
+
+    const logoutButtonStates = {
+        'default': {
+            '--figure-duration': '100',
+            '--transform-figure': 'none',
+            '--walking-duration': '100',
+            '--transform-arm1': 'none',
+            '--transform-wrist1': 'none',
+            '--transform-arm2': 'none',
+            '--transform-wrist2': 'none',
+            '--transform-leg1': 'none',
+            '--transform-calf1': 'none',
+            '--transform-leg2': 'none',
+            '--transform-calf2': 'none'
+        },
+        'hover': {
+            '--figure-duration': '100',
+            '--transform-figure': 'translateX(1.5px)',
+            '--walking-duration': '100',
+            '--transform-arm1': 'rotate(-5deg)',
+            '--transform-wrist1': 'rotate(-15deg)',
+            '--transform-arm2': 'rotate(5deg)',
+            '--transform-wrist2': 'rotate(6deg)',
+            '--transform-leg1': 'rotate(-10deg)',
+            '--transform-calf1': 'rotate(5deg)',
+            '--transform-leg2': 'rotate(20deg)',
+            '--transform-calf2': 'rotate(-20deg)'
+        },
+        'walking1': {
+            '--figure-duration': '300',
+            '--transform-figure': 'translateX(11px)',
+            '--walking-duration': '300',
+            '--transform-arm1': 'translateX(-4px) translateY(-2px) rotate(120deg)',
+            '--transform-wrist1': 'rotate(-5deg)',
+            '--transform-arm2': 'translateX(4px) rotate(-110deg)',
+            '--transform-wrist2': 'rotate(-5deg)',
+            '--transform-leg1': 'translateX(-3px) rotate(80deg)',
+            '--transform-calf1': 'rotate(-30deg)',
+            '--transform-leg2': 'translateX(4px) rotate(-60deg)',
+            '--transform-calf2': 'rotate(20deg)'
+        },
+        'walking2': {
+            '--figure-duration': '400',
+            '--transform-figure': 'translateX(17px)',
+            '--walking-duration': '300',
+            '--transform-arm1': 'rotate(60deg)',
+            '--transform-wrist1': 'rotate(-15deg)',
+            '--transform-arm2': 'rotate(-45deg)',
+            '--transform-wrist2': 'rotate(6deg)',
+            '--transform-leg1': 'rotate(-5deg)',
+            '--transform-calf1': 'rotate(10deg)',
+            '--transform-leg2': 'rotate(10deg)',
+            '--transform-calf2': 'rotate(-20deg)'
+        },
+        'falling1': {
+            '--figure-duration': '1600',
+            '--walking-duration': '400',
+            '--transform-arm1': 'rotate(-60deg)',
+            '--transform-wrist1': 'none',
+            '--transform-arm2': 'rotate(30deg)',
+            '--transform-wrist2': 'rotate(120deg)',
+            '--transform-leg1': 'rotate(-30deg)',
+            '--transform-calf1': 'rotate(-20deg)',
+            '--transform-leg2': 'rotate(20deg)'
+        },
+        'falling2': {
+            '--walking-duration': '300',
+            '--transform-arm1': 'rotate(-100deg)',
+            '--transform-arm2': 'rotate(-60deg)',
+            '--transform-wrist2': 'rotate(60deg)',
+            '--transform-leg1': 'rotate(80deg)',
+            '--transform-calf1': 'rotate(20deg)',
+            '--transform-leg2': 'rotate(-60deg)'
+        },
+        'falling3': {
+            '--walking-duration': '500',
+            '--transform-arm1': 'rotate(-30deg)',
+            '--transform-wrist1': 'rotate(40deg)',
+            '--transform-arm2': 'rotate(50deg)',
+            '--transform-wrist2': 'none',
+            '--transform-leg1': 'rotate(-30deg)',
+            '--transform-leg2': 'rotate(20deg)',
+            '--transform-calf2': 'none'
+        }
+    }
+
+
+    // Initial login status check
+    chrome.storage.local.get('jwt', (result) => {
+        if (result.jwt) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+            document.getElementById('main-ui').classList.add('main-ui-theme');
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-ui').style.display = 'none';
+        }
+    });
+
+    function showRatingDialog() {
+        const mainUI = document.getElementById('main-ui');
+        mainUI.innerHTML = `
+            <div class="rating-dialog">
+                <h3>Rate your experience</h3>
+                <p>How was your Quiz Crawler experience?</p>
+                <div class="stars">
+                    ${Array(5).fill('&#9733;').map((star, i) =>
+                        `<span class="star" data-rating="${i + 1}">${star}</span>`
+                    ).join('')}
+                </div>
+                <div class="rating-buttons">
+                    <button id="submit-rating" class="btn" disabled>Submit</button>
+                    <button class="btn skip-rating">Skip</button>
+                </div>
+            </div>
+        `;
+
+        // Add star rating functionality
+        const stars = mainUI.querySelectorAll('.star');
+        const submitBtn = mainUI.querySelector('#submit-rating');
+        let selectedRating = 0;
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.rating);
+                stars.forEach((s, i) => {
+                    s.classList.toggle('active', i < selectedRating);
+                });
+                submitBtn.disabled = false;
+            });
+
+            star.addEventListener('mouseover', () => {
+                const rating = parseInt(star.dataset.rating);
+                stars.forEach((s, i) => {
+                    s.style.color = i < rating ? '#ffd700' : '#ddd';
+                });
+            });
+        });
+
+        // Reset stars on mouse leave
+        const starsContainer = mainUI.querySelector('.stars');
+        starsContainer.addEventListener('mouseleave', () => {
+            stars.forEach((s, i) => {
+                s.style.color = i < selectedRating ? '#ffd700' : '#ddd';
+            });
+        });
+
+        // Handle rating submission
+        submitBtn.addEventListener('click', async () => {
+            try {
+                const jwt = await getStoredJWT();
+
+                // Send rating to backend
+                const response = await fetch('http://localhost:3000/api/submit-rating', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwt}`
+                    },
+                    body: JSON.stringify({ rating: selectedRating })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit rating');
+                }
+
+                console.log('Rating submitted:', selectedRating);
+                completeLogout(true);
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                completeLogout(true); // Still logout even if rating submission fails
+            }
+        });
+
+        // Handle skip
+        mainUI.querySelector('.skip-rating').addEventListener('click', () => {
+            completeLogout(true);
+        });
+    }
+
+    function completeLogout(fromRating = false) {
+        if (fromRating) {
+            chrome.identity.clearAllCachedAuthTokens(() => {
+                chrome.storage.local.clear(() => {  // Clear all storage instead of just JWT
+                    // Force reload the popup to get a fresh state
+                    window.location.reload();
+                });
+            });
+        }
+    }
+
+    function showLoginScreen() {
+                const loginScreen = document.getElementById('login-screen');
+        const mainUI = document.getElementById('main-ui');
+
+        // Reset login screen
+        loginScreen.innerHTML = `
+            <div>
+                <h1 class="title">Welcome to Quiz Crawler</h1>
+                <p class="subtitle">Sign in to continue to your account</p>
+            </div>
+            <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
+                <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    <path fill="none" d="M0 0h48v48H0z"/>
+                </svg>
+                <span class="btn-text">Sign in with Google</span>
+            </button>`;
+
+        // Show login screen and hide main UI
+        loginScreen.style.display = 'flex';
+        mainUI.style.display = 'none';
+
+        // Remove old event listeners by cloning and replacing the button
+        const oldLoginBtn = document.getElementById('loginBtn');
+        const newLoginBtn = oldLoginBtn.cloneNode(true);
+        oldLoginBtn.parentNode.replaceChild(newLoginBtn, oldLoginBtn);
+
+        // Add new event listener
+        newLoginBtn.addEventListener('click', login);
+    }
+
+   async function login() {
+            const loginScreen = document.getElementById('login-screen');
+
+        // Show loading animation
+        loginScreen.innerHTML = `
+            <div class="loading-state">
+                <p class="loading-message">Logging in...</p>
+                <div class="hole">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                </div>
+            </div>
+        `;
+
+        // Wait a moment to show the animation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Original login code continues here
+        chrome.identity.getAuthToken({ interactive: true }, async function(token) {
+            try {
+                if (chrome.runtime.lastError) {
+                    throw new Error(chrome.runtime.lastError.message);
+                }
+
+                console.log('Got token:', token); // Debug log
+
+                const response = await fetch('http://localhost:3000/api/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token })
+                });
+
+                console.log('Server response status:', response.status); // Debug log
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Server error');
+                }
+
+                const data = await response.json();
+
+                if (!data.token) {
+                    throw new Error('No token received from server');
+                }
+
+                chrome.storage.local.set({ 'jwt': data.token }, () => {
+                    const loginScreen = document.getElementById('login-screen');
+                    const mainUI = document.getElementById('main-ui');
+                    const quizContainer = document.getElementById('quiz-container');
+
+                    // Make sure settings are collapsed
+                    const configWrapper = document.querySelector('.config-wrapper');
+                    const toggleConfigBtn = document.getElementById('toggle-config');
+
+                    configWrapper.classList.add('collapsed');
+                    if (toggleConfigBtn) {
+                        toggleConfigBtn.classList.add('collapsed');
+                    }
+
+                    // Add welcome message
+                    quizContainer.innerHTML = createWelcomeMessage();
+
+                    // Add click handler for the Generate Quiz button
+                    const ctaButton = quizContainer.querySelector('.cta-button');
+                    if (ctaButton) {
+                        ctaButton.addEventListener('click', () => {
+                            // Disable the button
+                            ctaButton.disabled = true;
+                            ctaButton.textContent = "Generating...";
+                            ctaButton.style.opacity = "0.7";
+
+                            // Trigger the generate button
+                            const generateBtn = document.getElementById('generate-btn');
+                            generateBtn.click();
+                        });
+                    }
+
+                    loginScreen.style.display = 'none';
+                    mainUI.style.display = 'block';
+                    mainUI.classList.add('main-ui-theme');
+                });
+
+            } catch (error) {
+                console.error('Login error:', error); // Debug log
+
+                // Reset login screen with error message
+                loginScreen.innerHTML = `
+                    <div>
+                        <h1 class="title">Welcome to Quiz Crawler</h1>
+                        <p class="subtitle">Sign in to continue to your account</p>
+                    </div>
+                    <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
+                        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            <path fill="none" d="M0 0h48v48H0z"/>
+                        </svg>
+                        <span class="btn-text">Sign in with Google</span>
+                    </button>
+                    <div class="error">Login failed: ${error.message}</div>`;
+
+                // Reattach login event listener
+                document.getElementById('loginBtn').addEventListener('click', login);
+            }
+        });
+    }
+
+    async function checkUserRating() {
+        try {
+            const jwt = await getStoredJWT();
+            const response = await fetch('http://localhost:3000/api/check-rating', {
+                headers: {
+                    'Authorization': `Bearer ${jwt}`
+                }
+            });
+            const data = await response.json();
+            return data.hasRating;
+        } catch (error) {
+            console.error('Error checking rating:', error);
+            return false;
+        }
+    }
+
+    function showGoodbyeMessage() {
+        const mainUI = document.getElementById('main-ui');
+        mainUI.innerHTML = `
+            <div class="goodbye-screen">
+                <div class="login-container goodbye-container">
+                    <h1>Quiz Crawler</h1>
+                    <p class="caption">Thanks for using our service!</p>
+                    <div class="gif-container">
+                    <img src="assets/spider.gif" alt="Cartoon Spider" class="spider-gif">
+                    </div>
+                    <div class="signin-info">
+                        <p>&#128075; Hope to see you again soon<br>
+                        <small>Have a great day!</small></p>
+                    </div>
+
+                    <button id="close-goodbye" class="btn btn-login">
+                        <span class="btn-text">Close</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add event listener to the close button
+        document.getElementById('close-goodbye').addEventListener('click', () => {
+            completeLogout(true);
+        });
+    }
+
+    async function logout() {
+        // Show loading animation
+        const mainUI = document.getElementById('main-ui');
+        mainUI.innerHTML = `
+            <div class="loading-state">
+                <p class="loading-message">Logging out...</p>
+                <div class="hole">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                </div>
+            </div>
+        `;
+
+        // Wait a moment to show the animation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Check if user has already rated
+        const hasRating = await checkUserRating();
+
+        setTimeout(() => {
+            if (hasRating) {
+                showGoodbyeMessage();
+            } else {
+                showRatingDialog();
+            }
+        }, 1000);
+    }
+
+    // Helper to get stored JWT
+    function getStoredJWT() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get('jwt', (result) => {
+                resolve(result.jwt);
+            });
+        });
+    }
+
+    // Use this when making API calls
+    async function makeAuthenticatedRequest(url, options = {}) {
+        const jwt = await getStoredJWT();
+        return fetch(url, {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${jwt}`
+            }
+        });
+    }
+
+    // Listen for extension icon clicks
+    chrome.action.onClicked.addListener((tab) => {
+        chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
+    });
+
+    // Add this to your DOMContentLoaded event listener
+    document.getElementById('toggle-sidebar').addEventListener('click', () => {
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "toggleSidebar" });
+        });
+    });
+
+    // Add this function
+    function switchToSidebar() {
+        chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+            // First inject our sidebar
+            await chrome.tabs.sendMessage(tabs[0].id, { action: "injectSidebar" });
+            // Then close the popup
+            window.close();
+        });
+    }
+
+    // Check if we're in sidebar mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSidebar = urlParams.get('sidebar') === 'true';
+
+    if (isSidebar) {
+        document.body.classList.add('sidebar-mode');
+        // Hide the "Switch to Sidebar" button in sidebar mode
+        const switchButton = document.querySelector('.switch-to-sidebar');
+        if (switchButton) {
+            switchButton.style.display = 'none';
+        }
+    }
+
+    // Add switch to sidebar button (only in popup mode)
+    if (!isSidebar) {
+        // Remove or comment out this section
+        /*
+        const header = document.querySelector('.header .controls');
+        const switchButton = document.createElement('button');
+        switchButton.className = 'btn switch-to-sidebar';
+        switchButton.innerHTML = '&#8689;';
+        switchButton.title = 'Switch to Sidebar Mode';
+        header.prepend(switchButton);
+        */
+
+        switchButton.addEventListener('click', switchToSidebar);
+    }
+
+    // Remove the logout button completely
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn && logoutBtn.parentNode) {
+        logoutBtn.parentNode.removeChild(logoutBtn);
+    }
+
+    // Also remove any parent elements that were specific to the logout button
+    const backgroundElement = document.querySelector('.background.background--light');
+    if (backgroundElement && backgroundElement.parentNode) {
+        backgroundElement.parentNode.removeChild(backgroundElement);
+    }
+
+    // Remove the timer elements if any exist
+    const timerElements = document.querySelectorAll('.logout-timer');
+    timerElements.forEach(element => {
+        if (element.parentNode) {
+            element.parentNode.removeChild(element);
+        }
+    });
+
+    // Clean up any related styles
+    const styleElement = document.querySelector('style[data-for="logout-animation"]');
+    if (styleElement) {
+        styleElement.parentNode.removeChild(styleElement);
+    }
+
+
+    // Add collapsed class to the wrapper
+    configWrapper.classList.add('collapsed');
+
+    // Add collapsed class to the toggle button
+    if (toggleConfigBtn) {
+        toggleConfigBtn.classList.add('collapsed');
+    }
+
+    // Store the collapsed state in localStorage
+    localStorage.setItem('configCollapsed', 'true');
 });
