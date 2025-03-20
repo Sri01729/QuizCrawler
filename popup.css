@@ -873,6 +873,7 @@ code[class*="language-"] {
   left: 0;
   width: 100%;
   z-index: 9999;
+  background: linear-gradient(135deg, var(--black), var(--mid-gray));
 }
 
 .login-container {
@@ -891,15 +892,37 @@ code[class*="language-"] {
 }
 
 .spider-gif {
-  width: 330px;
-  height: 500px;
+  height: 48vh;
+  width: auto;
+  max-width: 90%;
+  object-fit: cover;
+  object-position: center;
   margin: 1.5rem auto;
   display: block;
-  object-fit: contain;
+  transform-origin: center center;
+
+  /* Add these properties to prevent cursor flickering */
+  pointer-events: none; /* This prevents the cursor from interacting with the GIF */
+  will-change: transform; /* Optimizes the transform for smoother rendering */
+  backface-visibility: hidden; /* Prevents rendering issues */
+  -webkit-backface-visibility: hidden; /* For Safari */
+  -webkit-transform-style: preserve-3d; /* For Safari */
+  position: relative; /* Create a new stacking context */
+  z-index: 1; /* Ensure proper stacking */
+}
+
+.gif-container {
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: default; /* Set a consistent cursor for the container */
 }
 
 .login-container h1 {
-  color: #2c3e50;
+  color: var(--black);
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
@@ -907,7 +930,7 @@ code[class*="language-"] {
 }
 
 .caption {
-  color: #7f8c8d;
+  color: var(--dark-gray-2);
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
 }
@@ -918,7 +941,7 @@ code[class*="language-"] {
   border-radius: 10px;
   margin: 1rem 0;
   font-size: 0.9rem;
-  color: #34495e;
+  color: var(--dark-gray-1);
 }
 
 .google-btn {
@@ -1462,7 +1485,7 @@ code[class*="language-"] {
 }
 
 .logoutButton--dark::before {
-  background-color: var(--primary);
+  background-color: black;
 }
 
 .logoutButton--dark .button-text {
