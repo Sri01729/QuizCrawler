@@ -1469,9 +1469,12 @@ code[class*="language-"] {
   color: white;
 }
 
-.logoutButton--dark .door,
+
 .logoutButton--dark .doorway {
   fill: white;
+}
+.logoutButton--dark .door{
+  fill: black;
 }
 
 .button-text {
@@ -1487,7 +1490,7 @@ code[class*="language-"] {
 }
 
 .figure {
-  bottom: 5px;
+  bottom: 0px;
   fill: rgb(86, 86, 86);
   right: 18px;
   transform: var(--transform-figure);
@@ -1495,7 +1498,9 @@ code[class*="language-"] {
   width: 30px;
   z-index: 4;
 }
-
+.figure:hover{
+  fill: rgb(255, 255, 255);
+}
 .door,
 .doorway {
   fill: var(--text-light);
@@ -1512,7 +1517,7 @@ code[class*="language-"] {
 }
 
 .door path {
-  fill: black;
+  fill: rgb(255, 255, 255);
   stroke: black;
   stroke-width: 4;
 }
@@ -1581,7 +1586,7 @@ code[class*="language-"] {
 }
 
 @keyframes flash {
-  0% { opacity: 0.4; }
+  0% { opacity: 1; }
   100% { opacity: 0; }
 }
 
