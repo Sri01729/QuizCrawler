@@ -840,6 +840,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const mainUI = document.getElementById('main-ui');
                     const quizContainer = document.getElementById('quiz-container');
 
+                    // Make sure settings are collapsed
+                    const configWrapper = document.querySelector('.config-wrapper');
+                    const toggleConfigBtn = document.getElementById('toggle-config');
+
+                    configWrapper.classList.add('collapsed');
+                    if (toggleConfigBtn) {
+                        toggleConfigBtn.classList.add('collapsed');
+                    }
+
                     // Add welcome message
                     quizContainer.innerHTML = createWelcomeMessage();
 
@@ -1059,4 +1068,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (styleElement) {
         styleElement.parentNode.removeChild(styleElement);
     }
+
+
+    // Add collapsed class to the wrapper
+    configWrapper.classList.add('collapsed');
+
+    // Add collapsed class to the toggle button
+    if (toggleConfigBtn) {
+        toggleConfigBtn.classList.add('collapsed');
+    }
+
+    // Store the collapsed state in localStorage
+    localStorage.setItem('configCollapsed', 'true');
 });
