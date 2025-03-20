@@ -343,7 +343,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ctaButton = quizContainer.querySelector('.cta-button');
                 if (ctaButton) {
                     ctaButton.addEventListener('click', () => {
-                        document.getElementById('generate-btn').click();
+                        // Disable the button
+                        ctaButton.disabled = true;
+                        ctaButton.textContent = "Generating...";
+                        ctaButton.style.opacity = "0.7";
+
+                        // Trigger the generate button
+                        const generateBtn = document.getElementById('generate-btn');
+                        generateBtn.click();
                     });
                 }
                         }
@@ -354,13 +361,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Event listener for the Generate Quiz button
+    // Update the Generate Quiz button event listener
     document.getElementById('generate-btn').addEventListener('click', async () => {
         try {
+            // Get the button element
+            const generateBtn = document.getElementById('generate-btn');
+
+            // Disable the button and change text to show loading
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Generating...";
+            generateBtn.style.opacity = "0.7"; // Visual feedback that it's disabled
+
             // First check if we have a JWT
             const jwt = await getStoredJWT();
             if (!jwt) {
                 quizContainer.innerHTML = '<div class="error">Please login first</div>';
+
+                // Re-enable the button
+                generateBtn.disabled = false;
+                generateBtn.textContent = "Generate Quiz";
+                generateBtn.style.opacity = "1";
                 return;
             }
 
@@ -422,12 +442,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data?.error || 'Invalid response from API');
             }
 
-            // Display the quiz questions
+                    // Display the quiz questions
             displayQuiz(data);
+
+            // Re-enable the button after questions are displayed
+            generateBtn.disabled = false;
+            generateBtn.textContent = "Generate Quiz";
+            generateBtn.style.opacity = "1";
 
         } catch (error) {
             console.error('Generation Error:', error);
             quizContainer.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+
+            // Re-enable the button on error
+            const generateBtn = document.getElementById('generate-btn');
+            generateBtn.disabled = false;
+            generateBtn.textContent = "Generate Quiz";
+            generateBtn.style.opacity = "1";
         }
     });
 
@@ -747,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoginScreen() {
-        const loginScreen = document.getElementById('login-screen');
+                const loginScreen = document.getElementById('login-screen');
         const mainUI = document.getElementById('main-ui');
 
         // Reset login screen
@@ -781,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
    async function login() {
-        const loginScreen = document.getElementById('login-screen');
+            const loginScreen = document.getElementById('login-screen');
 
         // Show loading animation
         loginScreen.innerHTML = `
@@ -815,11 +846,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Got token:', token); // Debug log
 
                 const response = await fetch('http://localhost:3000/api/auth/google', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ token })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token })
                 });
 
                 console.log('Server response status:', response.status); // Debug log
@@ -856,7 +887,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ctaButton = quizContainer.querySelector('.cta-button');
                     if (ctaButton) {
                         ctaButton.addEventListener('click', () => {
-                            document.getElementById('generate-btn').click();
+                            // Disable the button
+                            ctaButton.disabled = true;
+                            ctaButton.textContent = "Generating...";
+                            ctaButton.style.opacity = "0.7";
+
+                            // Trigger the generate button
+                            const generateBtn = document.getElementById('generate-btn');
+                            generateBtn.click();
                         });
                     }
 

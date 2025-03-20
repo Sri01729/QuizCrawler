@@ -354,6 +354,7 @@ button:active {
   font-size: 15px;
   position: relative;
   overflow: hidden;
+  margin: 2px;
 }
 
 .option:hover {
