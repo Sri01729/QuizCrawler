@@ -22,7 +22,7 @@ mermaid.initialize({
         htmlLabels: true, // Better compatibility
         curve: 'linear'
     },
-    theme: 'forest',
+    theme: 'default',
     logLevel: 0 // Enable error logging
 });
 
@@ -780,43 +780,46 @@ document.addEventListener('DOMContentLoaded', () => {
         newLoginBtn.addEventListener('click', login);
     }
 
-    function login() {
+   async function login() {
         const loginScreen = document.getElementById('login-screen');
 
-        // Show loading state
+        // Show loading animation
         loginScreen.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-text">Logging in...</div>
-                <div class="loading-spinner">
-                    <div class="circle"></div>
-                    <div class="circle"></div>
-                    <div class="circle"></div>
-                 <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-          </div>
-          <div class="loading-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-          </div>
-        </div>`;
+            <div class="loading-state">
+                <p class="loading-message">Logging in...</p>
+                <div class="hole">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                </div>
+            </div>
+        `;
 
+        // Wait a moment to show the animation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Original login code continues here
         chrome.identity.getAuthToken({ interactive: true }, async function(token) {
             try {
-            if (chrome.runtime.lastError) {
+                if (chrome.runtime.lastError) {
                     throw new Error(chrome.runtime.lastError.message);
-            }
+                }
 
                 console.log('Got token:', token); // Debug log
 
                 const response = await fetch('http://localhost:3000/api/auth/google', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ token })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token })
                 });
 
                 console.log('Server response status:', response.status); // Debug log
@@ -849,7 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     loginScreen.style.display = 'none';
-                        mainUI.style.display = 'block';
+                    mainUI.style.display = 'block';
                     mainUI.classList.add('main-ui-theme');
                 });
 
@@ -903,9 +906,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="login-container goodbye-container">
                     <h1>Quiz Crawler</h1>
                     <p class="caption">Thanks for using our service!</p>
-
+                    <div class="gif-container">
                     <img src="assets/spider.gif" alt="Cartoon Spider" class="spider-gif">
-
+                    </div>
                     <div class="signin-info">
                         <p>&#128075; Hope to see you again soon<br>
                         <small>Have a great day!</small></p>
@@ -925,9 +928,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function logout() {
-        // Show loading message first
+        // Show loading animation
         const mainUI = document.getElementById('main-ui');
-        mainUI.innerHTML = '<div class="loading-container"><div class="loading-text">Logging out...</div></div>';
+        mainUI.innerHTML = `
+            <div class="loading-state">
+                <p class="loading-message">Logging out...</p>
+                <div class="hole">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                </div>
+            </div>
+        `;
+
+        // Wait a moment to show the animation
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Check if user has already rated
         const hasRating = await checkUserRating();
@@ -938,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 showRatingDialog();
             }
-        }, 500);
+        }, 1000);
     }
 
     // Helper to get stored JWT

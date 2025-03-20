@@ -1822,3 +1822,88 @@ code[class*="language-"] {
   content: none !important;
 }
 
+/* Add the hole animation styling */
+.hole {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.hole i {
+  display: block;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 140px;
+  opacity: 0;
+  animation-name: scale;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+/* Set background colors from your grayscale palette */
+.hole i:nth-child(even) {
+  background-color: var(--dark-gray-1);
+}
+
+.hole i:nth-child(odd) {
+  background-color: var(--black);
+}
+
+.hole i:nth-child(1) { animation-delay: 0.3s; }
+.hole i:nth-child(2) { animation-delay: 0.6s; }
+.hole i:nth-child(3) { animation-delay: 0.9s; }
+.hole i:nth-child(4) { animation-delay: 1.2s; }
+.hole i:nth-child(5) { animation-delay: 1.5s; }
+.hole i:nth-child(6) { animation-delay: 1.8s; }
+.hole i:nth-child(7) { animation-delay: 2.1s; }
+.hole i:nth-child(8) { animation-delay: 2.4s; }
+.hole i:nth-child(9) { animation-delay: 2.7s; }
+.hole i:nth-child(10) { animation-delay: 3s; }
+
+@keyframes scale {
+  0% {
+    transform: scale(2);
+    opacity: 0;
+    box-shadow: 0px 0px 50px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    transform: scale(1) translate(0px, -5px);
+    opacity: 1;
+    box-shadow: 0px 8px 20px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    transform: scale(0.1) translate(0px, 5px);
+    opacity: 0;
+    box-shadow: 0px 10px 20px rgba(255, 255, 255, 0);
+  }
+}
+
+/* Container for the loading state */
+.loading-state {
+  background: linear-gradient(135deg, var(--black), var(--mid-gray));
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+}
+
+.loading-message {
+  color: white;
+  font-size: 24px;
+  margin-bottom: 30px;
+  font-weight: 500;
+  text-align: center;
+}
+
