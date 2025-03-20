@@ -1727,3 +1727,98 @@ code[class*="language-"] {
   box-shadow: 0 4px 12px rgba(38, 38, 38, 0.3);
 }
 
+/* Add styles for the goodbye screen to match login screen */
+.goodbye-screen {
+  background: linear-gradient(135deg, var(--black), var(--mid-gray));
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+}
+
+.goodbye-container {
+  /* Same styling as login-container but with a few adjustments */
+  background: rgba(255, 255, 255);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.goodbye-container h1 {
+  color: var(--black);
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+}
+
+/* Apply spider gif fixes to the goodbye screen as well */
+.goodbye-screen .spider-gif {
+  height: 48vh;
+  width: auto;
+  max-width: 90%;
+  object-fit: cover;
+  object-position: center;
+  margin: 1.5rem auto;
+  display: block;
+  transform-origin: center center;
+  pointer-events: none;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  position: relative;
+  z-index: 1;
+}
+
+/* Style the close button to match the login button */
+#close-goodbye {
+  background: var(--light-gray);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 25px;
+  display: inline-block;
+  margin: 0 auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  text-align: center;
+  min-width: 180px;
+}
+
+#close-goodbye:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(0,0,0,0.2);
+  background: var(--mid-gray);
+  text-decoration: none;
+}
+
+#close-goodbye:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  background: var(--dark-gray-1);
+}
+
+#close-goodbye .btn-text {
+  color: white;
+  font-weight: 500;
+  position: static;
+}
+
+#close-goodbye::after,
+#close-goodbye::before,
+#close-goodbye .btn-text::after,
+#close-goodbye .btn-text::before {
+  display: none !important;
+  content: none !important;
+}
+

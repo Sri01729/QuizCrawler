@@ -899,11 +899,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function showGoodbyeMessage() {
         const mainUI = document.getElementById('main-ui');
         mainUI.innerHTML = `
-            <div class="rating-dialog">
-                <h3>Thanks for using Quiz Crawler!</h3>
-                <p>Hope to see you again soon. Have a great day! &#128075;</p>
-                <div class="rating-buttons">
-                    <button class="btn" id="close-goodbye">Close</button>
+            <div class="goodbye-screen">
+                <div class="login-container goodbye-container">
+                    <h1>Quiz Crawler</h1>
+                    <p class="caption">Thanks for using our service!</p>
+
+                    <img src="assets/spider.gif" alt="Cartoon Spider" class="spider-gif">
+
+                    <div class="signin-info">
+                        <p>&#128075; Hope to see you again soon<br>
+                        <small>Have a great day!</small></p>
+                    </div>
+
+                    <button id="close-goodbye" class="btn btn-login">
+                        <span class="btn-text">Close</span>
+                    </button>
                 </div>
             </div>
         `;
