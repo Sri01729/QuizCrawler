@@ -440,3 +440,23 @@ chrome.action.onClicked.addListener(async (tab) => {
 - 1 second delay ensures page is loaded
 - Reload happens before sidebar shows
 - Maintains existing functionality
+
+### Bug Fix: Invalid Mermaid Diagrams
+**Problem Description:**
+- Some mermaid diagrams causing errors
+- Need to gracefully handle invalid diagrams
+
+**Solution:**
+- Added error handling for diagram rendering
+- Hide diagram section if rendering fails
+- Maintained all other functionality
+
+**Changes Made:**
+- Added try-catch for diagram rendering
+- Hide diagram button and container on error
+- No changes to existing app functionality
+
+**Notes:**
+- All other features remain unchanged
+- Only handles diagram errors
+- Better user experience with failed diagrams

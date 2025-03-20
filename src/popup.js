@@ -358,25 +358,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Display loading animation
+            // Show skeleton loading animation
             quizContainer.innerHTML = `
-        <div class="loading-container">
-          <div class="loading-text">Generating Quiz</div>
-          <div class="loading-spinner">
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
-            <div class="loading-brain"></div>
+                ${Array(3).fill().map(() => `
+                    <div class="question-container">
+                        <div class="skeleton skeleton-text short"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text medium"></div>
+                        <div class="options-container">
+                            <div class="skeleton option"></div>
+                            <div class="skeleton option"></div>
+                            <div class="skeleton option"></div>
+                            <div class="skeleton option"></div>
           </div>
-          <div class="loading-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+                        <div class="skeleton skeleton-button"></div>
           </div>
-        </div>`;
+                `).join('')}
+      `;
 
             // Get current tab and extract content
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
