@@ -203,7 +203,15 @@ document.addEventListener('DOMContentLoaded', () => {
             questions = questions.filter(q => q.diagram);
         }
 
-        quizContainer.innerHTML = questions.map((q, i) => `
+        quizContainer.innerHTML = questions.map((q, i) => {
+            // Only include diagram section if diagram exists AND is valid
+            const diagramSection = q.diagram ? `
+                <div class="diagram" style="display: none;"
+                     data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+                <button class="toggle-diagram">Show Diagram</button>
+            ` : '';
+
+            return `
             <div class="question">
                 <h3>Question ${i + 1}</h3>
                 <p>${q.question}</p>
@@ -213,14 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
                 `).join('') : ''}
                 <div class="answer" style="display: none;">Answer: ${formatCodeInAnswer(q.answer)}</div>
-                ${q.diagram ? `
-                    <div class="diagram" style="display: none;"
-                         data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
-                    <button class="toggle-diagram">Show Diagram</button>
-                ` : ''}
+                    ${diagramSection}
                 ${q.answer ? '<button class="toggle-answer">Show Answer</button>' : ''}
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Apply syntax highlighting to any pre/code blocks that might be in the initial view
         Prism.highlightAllUnder(quizContainer);
@@ -266,17 +271,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Toggle Diagram functionality with improved error handling
         quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
-            // In your diagram toggle event listener:
-            button.addEventListener('click', function () {
+            button.addEventListener('click', function() {
                 const diagramDiv = this.parentElement.querySelector('.diagram');
                 if (diagramDiv.style.display === 'none') {
                     diagramDiv.style.display = 'block';
                     this.textContent = 'Hide Diagram';
 
-                    const rawCode = diagramDiv.dataset.diagramCode;
-                    const diagramCode = sanitizeMermaidCode(rawCode);
-
-                    renderMermaidDiagram(diagramDiv, diagramCode);
+                    try {
+                        const diagramCode = diagramDiv.dataset.diagramCode;
+                        mermaid.render(`mermaid-${Date.now()}`, diagramCode)
+                            .then(({ svg }) => {
+                                diagramDiv.innerHTML = svg;
+                            })
+                            .catch(error => {
+                                // If diagram fails, hide the diagram section
+                                diagramDiv.style.display = 'none';
+                                this.style.display = 'none';
+                            });
+                    } catch (error) {
+                        // If diagram fails, hide the diagram section
+                        diagramDiv.style.display = 'none';
+                        this.style.display = 'none';
+                    }
                 } else {
                     diagramDiv.style.display = 'none';
                     this.textContent = 'Show Diagram';
