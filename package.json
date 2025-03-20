@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@lordicon/element": "^1.10.1",
     "@types/prismjs": "^1.26.5",
     "docx": "^9.2.0",
     "mermaid": "^11.5.0",

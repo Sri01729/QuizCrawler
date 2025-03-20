@@ -5,5 +5,5 @@ chrome.action.onClicked.addListener(async (tab) => {
     // Wait a bit for the page to load, then show sidebar
     setTimeout(() => {
         chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
-    }, 1000); // Wait 1 second after reload
+    }, 2000); // Wait 1 second after reload
 });

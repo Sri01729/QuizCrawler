@@ -73,7 +73,24 @@ function isCorrectAnswer(optionText, answerText) {
     return cleanOption === cleanAnswer;
 }
 
-
+// Add this new function to create the welcome message
+function createWelcomeMessage() {
+    return `
+        <div class="welcome-message">
+            <div class="icon-wrapper">
+                <div class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="title">Welcome to Quiz Crawler</h2>
+            <p class="description">Need quizzes? We&#39;ve got &#39;em! Quiz Crawler serves up fresh questions and answers faster than a caffeinated coder. Browse, click, and boom&mdash;your HTML page is now quiz-tastic!</p>
+            <button class="cta-button">Generate Quiz</button>
+        </div>
+    `;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const quizContainer = document.getElementById('quiz-container');
@@ -305,46 +322,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Attempt to load any saved quiz when the popup opens
-    chrome.storage.local.get('lastQuiz', (data) => {
+    chrome.storage.local.get(['lastQuiz', 'jwt'], (data) => {
+        // First check if the user is logged in
+        if (data.jwt) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+
+            // If there's a saved quiz, display it
         if (data.lastQuiz && data.lastQuiz.quizHTML) {
             quizContainer.innerHTML = data.lastQuiz.quizHTML;
             questions = data.lastQuiz.questions;
 
-            // Rebind "toggle-answer" functionality
-            quizContainer.querySelectorAll('.toggle-answer').forEach(button => {
-                button.addEventListener('click', function () {
-                    const answerDiv = this.parentElement.querySelector('.answer');
-                    if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
-                        answerDiv.style.display = 'block';
-                        this.textContent = 'Hide Answer';
-                        // Apply syntax highlighting when answer becomes visible
-                        Prism.highlightAllUnder(answerDiv);
+                // Rebind event listeners...
+                // ... (existing rebinding code) ...
                     } else {
-                        answerDiv.style.display = 'none';
-                        this.textContent = 'Show Answer';
-                    }
-                });
-            });
+                // No saved quiz, show welcome message
+                quizContainer.innerHTML = createWelcomeMessage();
 
-            // Rebind "toggle-diagram" functionality
-            quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
-                button.addEventListener('click', function () {
-                    const diagramDiv = this.parentElement.querySelector('.diagram');
-                    if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
-                        diagramDiv.style.display = 'block';
-                        this.textContent = 'Hide Diagram';
-
-                        // Get diagram code and render it
-                        const diagramCode = diagramDiv.getAttribute('data-diagram-code');
-                        if (diagramCode) {
-                            renderMermaidDiagram(diagramDiv, diagramCode);
+                // Add click handler for the Generate Quiz button
+                const ctaButton = quizContainer.querySelector('.cta-button');
+                if (ctaButton) {
+                    ctaButton.addEventListener('click', () => {
+                        document.getElementById('generate-btn').click();
+                    });
+                }
                         }
                     } else {
-                        diagramDiv.style.display = 'none';
-                        this.textContent = 'Show Diagram';
-                    }
-                });
-            });
+            // User is not logged in
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-ui').style.display = 'none';
         }
     });
 
@@ -470,10 +476,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Clear quiz functionality
     document.getElementById('clear-btn').addEventListener('click', () => {
-        quizContainer.innerHTML = '';
+        quizContainer.innerHTML = createWelcomeMessage();
         questions = [];
         chrome.storage.local.remove('lastQuiz', () => {
-            quizContainer.innerHTML = '<div class="success">Quiz cleared!</div>';
+            // Add click handler for the Generate Quiz button
+            const ctaButton = quizContainer.querySelector('.cta-button');
+            if (ctaButton) {
+                ctaButton.addEventListener('click', () => {
+                    document.getElementById('generate-btn').click();
+                });
+            }
         });
     });
 
@@ -481,13 +493,161 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginBtn').addEventListener('click', login);
 
     // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        // Prevent any default behavior
+        e.preventDefault();
+        // Set a 3-second timeout before calling the actual logout function
+        setTimeout(() => {
+            logout(); // Call the original logout function after 3 seconds
+        }, 2300); // 3000ms = 3 seconds
+    });
+
+    document.querySelectorAll('.logoutButton').forEach(button => {
+        button.state = 'default'
+
+        // function to transition a button from one state to the next
+        let updateButtonState = (button, state) => {
+            if (logoutButtonStates[state]) {
+                button.state = state
+                for (let key in logoutButtonStates[state]) {
+                    button.style.setProperty(key, logoutButtonStates[state][key])
+                }
+            }
+        }
+
+        // mouse hover listeners on button
+        button.addEventListener('mouseenter', () => {
+            if (button.state === 'default') {
+                updateButtonState(button, 'hover')
+            }
+        })
+        button.addEventListener('mouseleave', () => {
+            if (button.state === 'hover') {
+                updateButtonState(button, 'default')
+            }
+        })
+
+        // click listener on button
+        button.addEventListener('click', () => {
+            if (button.state === 'default' || button.state === 'hover') {
+                button.classList.add('clicked')
+                updateButtonState(button, 'walking1')
+                setTimeout(() => {
+                    button.classList.add('door-slammed')
+                    updateButtonState(button, 'walking2')
+                    setTimeout(() => {
+                        button.classList.add('falling')
+                        updateButtonState(button, 'falling1')
+                        setTimeout(() => {
+                            updateButtonState(button, 'falling2')
+                            setTimeout(() => {
+                                updateButtonState(button, 'falling3')
+                                setTimeout(() => {
+                                    button.classList.remove('clicked')
+                                    button.classList.remove('door-slammed')
+                                    button.classList.remove('falling')
+                                    updateButtonState(button, 'default')
+                                }, 1000)
+                            }, logoutButtonStates['falling2']['--walking-duration'])
+                        }, logoutButtonStates['falling1']['--walking-duration'])
+                    }, logoutButtonStates['walking2']['--figure-duration'])
+                }, logoutButtonStates['walking1']['--figure-duration'])
+            }
+        })
+    })
+
+    const logoutButtonStates = {
+        'default': {
+            '--figure-duration': '100',
+            '--transform-figure': 'none',
+            '--walking-duration': '100',
+            '--transform-arm1': 'none',
+            '--transform-wrist1': 'none',
+            '--transform-arm2': 'none',
+            '--transform-wrist2': 'none',
+            '--transform-leg1': 'none',
+            '--transform-calf1': 'none',
+            '--transform-leg2': 'none',
+            '--transform-calf2': 'none'
+        },
+        'hover': {
+            '--figure-duration': '100',
+            '--transform-figure': 'translateX(1.5px)',
+            '--walking-duration': '100',
+            '--transform-arm1': 'rotate(-5deg)',
+            '--transform-wrist1': 'rotate(-15deg)',
+            '--transform-arm2': 'rotate(5deg)',
+            '--transform-wrist2': 'rotate(6deg)',
+            '--transform-leg1': 'rotate(-10deg)',
+            '--transform-calf1': 'rotate(5deg)',
+            '--transform-leg2': 'rotate(20deg)',
+            '--transform-calf2': 'rotate(-20deg)'
+        },
+        'walking1': {
+            '--figure-duration': '300',
+            '--transform-figure': 'translateX(11px)',
+            '--walking-duration': '300',
+            '--transform-arm1': 'translateX(-4px) translateY(-2px) rotate(120deg)',
+            '--transform-wrist1': 'rotate(-5deg)',
+            '--transform-arm2': 'translateX(4px) rotate(-110deg)',
+            '--transform-wrist2': 'rotate(-5deg)',
+            '--transform-leg1': 'translateX(-3px) rotate(80deg)',
+            '--transform-calf1': 'rotate(-30deg)',
+            '--transform-leg2': 'translateX(4px) rotate(-60deg)',
+            '--transform-calf2': 'rotate(20deg)'
+        },
+        'walking2': {
+            '--figure-duration': '400',
+            '--transform-figure': 'translateX(17px)',
+            '--walking-duration': '300',
+            '--transform-arm1': 'rotate(60deg)',
+            '--transform-wrist1': 'rotate(-15deg)',
+            '--transform-arm2': 'rotate(-45deg)',
+            '--transform-wrist2': 'rotate(6deg)',
+            '--transform-leg1': 'rotate(-5deg)',
+            '--transform-calf1': 'rotate(10deg)',
+            '--transform-leg2': 'rotate(10deg)',
+            '--transform-calf2': 'rotate(-20deg)'
+        },
+        'falling1': {
+            '--figure-duration': '1600',
+            '--walking-duration': '400',
+            '--transform-arm1': 'rotate(-60deg)',
+            '--transform-wrist1': 'none',
+            '--transform-arm2': 'rotate(30deg)',
+            '--transform-wrist2': 'rotate(120deg)',
+            '--transform-leg1': 'rotate(-30deg)',
+            '--transform-calf1': 'rotate(-20deg)',
+            '--transform-leg2': 'rotate(20deg)'
+        },
+        'falling2': {
+            '--walking-duration': '300',
+            '--transform-arm1': 'rotate(-100deg)',
+            '--transform-arm2': 'rotate(-60deg)',
+            '--transform-wrist2': 'rotate(60deg)',
+            '--transform-leg1': 'rotate(80deg)',
+            '--transform-calf1': 'rotate(20deg)',
+            '--transform-leg2': 'rotate(-60deg)'
+        },
+        'falling3': {
+            '--walking-duration': '500',
+            '--transform-arm1': 'rotate(-30deg)',
+            '--transform-wrist1': 'rotate(40deg)',
+            '--transform-arm2': 'rotate(50deg)',
+            '--transform-wrist2': 'none',
+            '--transform-leg1': 'rotate(-30deg)',
+            '--transform-leg2': 'rotate(20deg)',
+            '--transform-calf2': 'none'
+        }
+    }
+
 
     // Initial login status check
     chrome.storage.local.get('jwt', (result) => {
         if (result.jwt) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'block';
+            document.getElementById('main-ui').classList.add('main-ui-theme');
         } else {
             document.getElementById('login-screen').style.display = 'flex';
             document.getElementById('main-ui').style.display = 'none';
@@ -621,9 +781,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function login() {
-                const loginScreen = document.getElementById('login-screen');
+        const loginScreen = document.getElementById('login-screen');
 
-            // Show loading state
+        // Show loading state
         loginScreen.innerHTML = `
             <div class="loading-container">
                 <div class="loading-text">Logging in...</div>
@@ -645,9 +805,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         chrome.identity.getAuthToken({ interactive: true }, async function(token) {
             try {
-                if (chrome.runtime.lastError) {
+            if (chrome.runtime.lastError) {
                     throw new Error(chrome.runtime.lastError.message);
-                }
+            }
 
                 console.log('Got token:', token); // Debug log
 
@@ -675,9 +835,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.storage.local.set({ 'jwt': data.token }, () => {
                     const loginScreen = document.getElementById('login-screen');
                     const mainUI = document.getElementById('main-ui');
+                    const quizContainer = document.getElementById('quiz-container');
+
+                    // Add welcome message
+                    quizContainer.innerHTML = createWelcomeMessage();
+
+                    // Add click handler for the Generate Quiz button
+                    const ctaButton = quizContainer.querySelector('.cta-button');
+                    if (ctaButton) {
+                        ctaButton.addEventListener('click', () => {
+                            document.getElementById('generate-btn').click();
+                        });
+                    }
 
                     loginScreen.style.display = 'none';
                         mainUI.style.display = 'block';
+                    mainUI.classList.add('main-ui-theme');
                 });
 
             } catch (error) {
@@ -827,5 +1000,31 @@ document.addEventListener('DOMContentLoaded', () => {
         */
 
         switchButton.addEventListener('click', switchToSidebar);
+    }
+
+    // Remove the logout button completely
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn && logoutBtn.parentNode) {
+        logoutBtn.parentNode.removeChild(logoutBtn);
+    }
+
+    // Also remove any parent elements that were specific to the logout button
+    const backgroundElement = document.querySelector('.background.background--light');
+    if (backgroundElement && backgroundElement.parentNode) {
+        backgroundElement.parentNode.removeChild(backgroundElement);
+    }
+
+    // Remove the timer elements if any exist
+    const timerElements = document.querySelectorAll('.logout-timer');
+    timerElements.forEach(element => {
+        if (element.parentNode) {
+            element.parentNode.removeChild(element);
+        }
+    });
+
+    // Clean up any related styles
+    const styleElement = document.querySelector('style[data-for="logout-animation"]');
+    if (styleElement) {
+        styleElement.parentNode.removeChild(styleElement);
     }
 });
