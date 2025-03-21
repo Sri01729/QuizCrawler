@@ -59,6 +59,7 @@ body {
   position: relative;
   background-color: white;
   box-shadow: var(--shadow);
+  animation: slideIn 0.4s ease-out;
 }
 
 /* For sidebar mode */
@@ -77,6 +78,9 @@ body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+  animation-delay: 0.1s;
 }
 
 .header h2 {
@@ -128,6 +132,9 @@ body {
   position: relative;
   z-index: 10;
   margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+  animation-delay: 0.2s;
 }
 
 .config-header {
@@ -268,6 +275,9 @@ button:active {
   position: relative;
   z-index: 2;
   background-color: transparent;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+  animation-delay: 0.3s;
 }
 
 /* Styling for generated quiz content */
@@ -423,6 +433,9 @@ button:active {
   padding: 20px 24px;
   background-color: white;
   border-top: 1px solid #e5e7eb;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+  animation-delay: 0.4s;
   z-index: 10;
 }
 
@@ -875,6 +888,13 @@ code[class*="language-"] {
   width: 100%;
   z-index: 9999;
   background: linear-gradient(135deg, var(--black), var(--mid-gray));
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#login-screen.fade-in {
+  animation: fadeInUp 0.8s ease-out;
 }
 
 .login-container {
@@ -1015,13 +1035,16 @@ code[class*="language-"] {
   transform: rotate(15deg);
 }
 
-.btn-text {
+/* Add line animation to both buttons */
+.btn-login .btn-text, .btn-signup .btn-text {
   flex: 1;
   text-align: center;
   position: relative;
+  color: var(--dark-gray-1);
+  font-weight: 500;
 }
 
-.btn-login .btn-text::after {
+.btn-login .btn-text::after, .btn-signup .btn-text::after {
   content: "";
   position: absolute;
   bottom: -4px;
@@ -1043,7 +1066,7 @@ code[class*="language-"] {
   opacity: 0.7;
 }
 
-.btn-login:hover .btn-text::after {
+.btn-login:hover .btn-text::after, .btn-signup:hover .btn-text::after {
   transform: scaleX(1);
   transform-origin: left;
 }
@@ -1381,7 +1404,8 @@ code[class*="language-"] {
   border: none;
   border-radius: 6px;
   padding: 12px 24px;
-  font-size: 1rem;
+  font-size: 16px;
+  min-width: 200px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1740,6 +1764,23 @@ code[class*="language-"] {
   left: 0;
   width: 100%;
   z-index: 9999;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.goodbye-screen.fade-out {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none; /* Prevent interaction during fade-out */
+}
+
+#login-screen {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#login-screen.fade-in {
+  animation: fadeInUp 0.8s ease-out;
 }
 
 .goodbye-container {
@@ -1906,5 +1947,158 @@ code[class*="language-"] {
   margin-bottom: 30px;
   font-weight: 500;
   text-align: center;
+}
+
+/* Add animation for the container when it first appears */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add animation for child elements to create a staggered effect */
+.header,
+.config-wrapper,
+#quiz-container,
+.storage-controls {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.header {
+  animation-delay: 0.1s;
+}
+
+.config-wrapper {
+  animation-delay: 0.2s;
+}
+
+#quiz-container {
+  animation-delay: 0.3s;
+}
+
+.storage-controls {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add these styles to fix the transition shadow issues */
+.goodbye-screen {
+  background: linear-gradient(135deg, var(--black), var(--mid-gray));
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.goodbye-screen.fade-out {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none; /* Prevent interaction during fade-out */
+}
+
+.login-container, .goodbye-container {
+  transition: box-shadow 0.3s ease;
+}
+
+/* Class to remove shadows during transitions */
+.no-shadow {
+  box-shadow: none !important;
+}
+
+#login-screen {
+  z-index: 999;
+}
+
+.goodbye-screen.fade-out {
+  z-index: 998; /* Lower z-index when fading out */
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add these styles for the auth buttons container and button styling */
+.auth-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.btn-login, .btn-signup {
+    background: white;
+    color: var(--dark-gray-1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 12px 15px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: calc(50% - 5px);
+    justify-content: center;
+}
+
+.btn-login:hover, .btn-signup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    background: #f8f8f8;
+}
+
+.btn-login:active, .btn-signup:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #f0f0f0;
+}
+
+.btn-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-gray-1);
+}
+
+/* For smaller screens, ensure buttons remain readable */
+@media (max-width: 350px) {
+    .auth-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-login, .btn-signup {
+        width: 100%;
+    }
 }
 

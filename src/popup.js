@@ -17,13 +17,71 @@ window.process = process;
 mermaid.initialize({
     startOnLoad: false,
     securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: {
+        // Base colors from your grayscale palette
+        primary: '#000000',            // Black
+        secondary: '#262626',          // Dark Gray 1
+        tertiary: '#424242',           // Dark Gray 2
+
+        // Text and backgrounds
+        primaryTextColor: '#f4f4f4',   // Light text for dark backgrounds
+        secondaryTextColor: '#ffffff', // White text for dark backgrounds
+        tertiaryTextColor: '#e0e0e0',  // Light gray text
+
+        // Backgrounds and borders
+        background: '#f4f4f4',         // Light background
+        mainBkg: '#595959',            // Mid Gray for main elements
+        nodeBorder: '#262626',         // Dark borders
+
+        // Lines and connectors
+        lineColor: '#777777',          // Light Gray for lines
+
+        // Notes and highlights
+        noteBkgColor: '#595959',       // Mid Gray for notes
+        noteTextColor: '#ffffff',      // White text for notes
+        noteBorderColor: '#262626',    // Dark border for notes
+
+        // Specific chart elements
+        clusterBkg: '#424242',         // Dark Gray 2 for subgraphs
+        titleColor: '#000000',         // Black for titles
+
+        // State diagram colors
+        labelColor: '#ffffff',         // White for labels
+        altBackground: '#777777',      // Light Gray for alternate backgrounds
+
+        // Dark mode setting
+        darkMode: true,
+
+        // Class diagram colors
+        classText: '#ffffff',          // White text in class diagrams
+
+        // Edge labels
+        edgeLabelBackground: '#424242', // Dark Gray 2 for edge labels
+
+        // Actor colors for sequence diagrams
+        actorBkg: '#262626',            // Dark Gray 1 for actors
+        actorTextColor: '#ffffff',      // White text for actors
+
+        // Pie chart colors
+        pie1: '#000000',                // Black
+        pie2: '#262626',                // Dark Gray 1
+        pie3: '#424242',                // Dark Gray 2
+        pie4: '#595959',                // Mid Gray
+        pie5: '#777777',                // Light Gray
+        pieTitleTextColor: '#000000',   // Black for pie titles
+        pieSectionTextColor: '#ffffff', // White for section labels
+        pieStrokeColor: '#262626'       // Dark Gray 1 for borders
+    },
     flowchart: {
         useMaxWidth: true,
-        htmlLabels: true, // Better compatibility
+        htmlLabels: true,
         curve: 'linear'
     },
-    theme: 'default',
-    logLevel: 0 // Enable error logging
+    sequence: {
+        useMaxWidth: true,
+        mirrorActors: true
+    }
 });
 
 let questions = []; // Global variable to hold quiz data
@@ -73,21 +131,39 @@ function isCorrectAnswer(optionText, answerText) {
     return cleanOption === cleanAnswer;
 }
 
-// Add this new function to create the welcome message
+// Update the welcome message with a question mark icon instead of a tick mark
 function createWelcomeMessage() {
+    // The existing welcome message HTML...
+
+    // Make sure to collapse settings after rendering the welcome message
+    setTimeout(() => {
+        const configWrapper = document.querySelector('.config-wrapper');
+        const toggleConfigBtn = document.getElementById('toggle-config');
+
+        if (configWrapper) {
+            configWrapper.classList.add('collapsed');
+        }
+
+        if (toggleConfigBtn) {
+            toggleConfigBtn.classList.add('collapsed');
+        }
+    }, 0);
+
+    // Return the welcome message HTML as before
     return `
         <div class="welcome-message">
             <div class="icon-wrapper">
                 <div class="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
-                        <path d="m9 12 2 2 4-4"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                 </div>
             </div>
-            <h2 class="title">Welcome to Quiz Crawler</h2>
-            <p class="description">Need quizzes? We&#39;ve got &#39;em! Quiz Crawler serves up fresh questions and answers faster than a caffeinated coder. Browse, click, and boom&mdash;your HTML page is now quiz-tastic!</p>
-            <button class="cta-button">Generate Quiz</button>
+            <h2 class="title">Welcome to Quiz Scraper</h2>
+            <p class="description">Need quizzes? We&#39;ve got &#39;em! Quiz Scraper serves up fresh questions and answers faster than a caffeinated coder. Browse, click, and boom&mdash;your HTML page is now quiz-tastic!</p>
+            <button class="cta-button">Quizify This Page</button>
         </div>
     `;
 }
@@ -359,6 +435,18 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-screen').style.display = 'flex';
             document.getElementById('main-ui').style.display = 'none';
         }
+
+        // Ensure settings are collapsed
+        const configWrapper = document.querySelector('.config-wrapper');
+        const toggleConfigBtn = document.getElementById('toggle-config');
+
+        if (configWrapper) {
+            configWrapper.classList.add('collapsed');
+        }
+
+        if (toggleConfigBtn) {
+            toggleConfigBtn.classList.add('collapsed');
+        }
     });
 
     // Update the Generate Quiz button event listener
@@ -379,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Re-enable the button
                 generateBtn.disabled = false;
-                generateBtn.textContent = "Generate Quiz";
+                generateBtn.textContent = "Quizify This Page";
                 generateBtn.style.opacity = "1";
                 return;
             }
@@ -447,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Re-enable the button after questions are displayed
             generateBtn.disabled = false;
-            generateBtn.textContent = "Generate Quiz";
+            generateBtn.textContent = "Quizify This Page";
             generateBtn.style.opacity = "1";
 
         } catch (error) {
@@ -457,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Re-enable the button on error
             const generateBtn = document.getElementById('generate-btn');
             generateBtn.disabled = false;
-            generateBtn.textContent = "Generate Quiz";
+            generateBtn.textContent = "Quizify This Page";
             generateBtn.style.opacity = "1";
         }
     });
@@ -689,8 +777,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainUI = document.getElementById('main-ui');
         mainUI.innerHTML = `
             <div class="rating-dialog">
-                <h3>Rate your experience</h3>
-                <p>How was your Quiz Crawler experience?</p>
+                <h3>Rate your Quiz Scraper experience</h3>
+                <p>How was your Quiz Scraper experience?</p>
                 <div class="stars">
                     ${Array(5).fill('&#9733;').map((star, i) =>
                         `<span class="star" data-rating="${i + 1}">${star}</span>`
@@ -783,20 +871,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset login screen
         loginScreen.innerHTML = `
-            <div>
-                <h1 class="title">Welcome to Quiz Crawler</h1>
-                <p class="subtitle">Sign in to continue to your account</p>
+            <div class="login-container">
+                <h1>Quiz Scraper</h1>
+                <p class="caption">Your Smart Quiz Generator</p>
+
+                <img src="assets/spider.gif" alt="Cartoon Spider" class="spider-gif">
+
+                <div class="signin-info">
+                    <p>&#128274; Secure Google Sign-In<br>
+                    <small>We only access basic profile information</small></p>
+                </div>
+
+                <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
+                    <span class="btn-text">Sign in with Google</span>
+                </button>
             </div>
-            <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
-                <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                    <path fill="none" d="M0 0h48v48H0z"/>
-                </svg>
-                <span class="btn-text">Sign in with Google</span>
-            </button>`;
+        `;
 
         // Show login screen and hide main UI
         loginScreen.style.display = 'flex';
@@ -908,20 +998,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Reset login screen with error message
                 loginScreen.innerHTML = `
-                    <div>
-                        <h1 class="title">Welcome to Quiz Crawler</h1>
-                        <p class="subtitle">Sign in to continue to your account</p>
+                    <div class="login-container">
+                        <h1>Quiz Scraper</h1>
+                        <p class="caption">Your Smart Quiz Generator</p>
+
+                        <img src="assets/spider.gif" alt="Cartoon Spider" class="spider-gif">
+
+                        <div class="signin-info">
+                            <p>&#128274; Secure Google Sign-In<br>
+                            <small>We only access basic profile information</small></p>
+                        </div>
+
+                        <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
+                            <span class="btn-text">Sign in with Google</span>
+                        </button>
                     </div>
-                    <button id="loginBtn" class="btn btn-login google-btn" aria-label="Sign in with Google">
-                        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                            <path fill="none" d="M0 0h48v48H0z"/>
-                        </svg>
-                        <span class="btn-text">Sign in with Google</span>
-                    </button>
                     <div class="error">Login failed: ${error.message}</div>`;
 
                 // Reattach login event listener
@@ -951,11 +1042,11 @@ document.addEventListener('DOMContentLoaded', () => {
         mainUI.innerHTML = `
             <div class="goodbye-screen">
                 <div class="login-container goodbye-container">
-                    <h1>Quiz Crawler</h1>
+                    <h1>Quiz Scraper</h1>
                     <p class="caption">Thanks for using our service!</p>
-                    <div class="gif-container">
+
                     <img src="assets/spider.gif" alt="Cartoon Spider" class="spider-gif">
-                    </div>
+
                     <div class="signin-info">
                         <p>&#128075; Hope to see you again soon<br>
                         <small>Have a great day!</small></p>
@@ -968,9 +1059,37 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // Add event listener to the close button
+        // Add modified event listener to the close button
         document.getElementById('close-goodbye').addEventListener('click', () => {
-            completeLogout(true);
+            // Get references to both containers
+            const goodbyeScreen = document.querySelector('.goodbye-screen');
+            const goodbyeContainer = document.querySelector('.goodbye-container');
+            const loginScreen = document.getElementById('login-screen');
+
+            // First remove shadows from the containers to prevent overlap issues
+            goodbyeContainer.classList.add('no-shadow');
+
+            // Add fade-out animation to the goodbye screen
+            goodbyeScreen.classList.add('fade-out');
+
+            // Wait for the animation to complete before showing login screen
+            setTimeout(() => {
+              // Prepare the login screen but keep it without shadows initially
+              loginScreen.classList.add('no-shadow');
+              loginScreen.style.display = 'flex';
+              loginScreen.classList.add('fade-in');
+
+              // Complete the logout process
+              completeLogout(true);
+
+              // After the login screen appears, restore its shadows with a delay
+              setTimeout(() => {
+                const loginContainer = document.querySelector('#login-screen .login-container');
+                if (loginContainer) {
+                  loginContainer.classList.remove('no-shadow');
+                }
+              }, 100);
+            }, 800); // Matches the animation duration
         });
     }
 
@@ -1082,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Remove the logout button completely
-    const logoutBtn = document.getElementById('logoutBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn && logoutBtn.parentNode) {
         logoutBtn.parentNode.removeChild(logoutBtn);
     }
@@ -1118,4 +1237,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Store the collapsed state in localStorage
     localStorage.setItem('configCollapsed', 'true');
+
+    // Add event listener for the signup button
+    const signupBtn = document.getElementById('signupBtn');
+    if (signupBtn) {
+        signupBtn.addEventListener('click', () => {
+            // For now, just trigger the same login function
+            // You can modify this to handle signup differently if needed
+            login();
+        });
+    }
 });

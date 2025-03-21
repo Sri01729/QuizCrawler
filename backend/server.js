@@ -50,10 +50,261 @@ app.post('/api/generate-quiz', authenticateToken, async (req, res) => {
 
 For each question, follow these category-specific requirements:
 - "General": Open-ended questions about common practices
-- "Coding Examples": Include code snippets/implementation questions
+- "Programming": Include code snippets/implementation questions
 - "Scenario-Based": Situational questions with multiple-choice options
 - "Conceptual": Theory/principle explanation questions
 - "Mermaid Diagram": Questions requiring flow/architecture diagrams
+- "Interview": Interview questions
+
+personalities regarding category:
+- 'general':
+<smithery:sequential-thinking>
+<task>
+Create quiz questions about the provided content with structured reasoning.
+</task>
+
+<step name="understand-content">
+Analyze the full provided content thoroughly.
+What are the main topics, concepts, and key points in this content?
+What knowledge domains does this content cover?
+</step>
+
+<step name="identify-key-areas">
+Based on the analysis, identify ${count} distinct areas that would make good quiz questions.
+For each area, note why it's important and what testing it would reveal about someone's understanding.
+</step>
+
+<step name="craft-questions">
+For each identified area, craft a clear, concise question of ${difficulty} difficulty.
+Ensure each question has a single, unambiguous correct answer.
+Make questions challenging but fair, avoiding trick questions.
+</step>
+
+<step name="develop-answers">
+For each question, develop a comprehensive answer that explains the concept fully.
+Include relevant context, definitions, and examples where appropriate.
+Ensure answers are accurate and align precisely with the questions.
+</step>
+
+</smithery:sequential-thinking>
+
+- 'programming':
+<smithery:sequential-thinking>
+<task>
+Convert ${content} into programming-style questions/snippets that abstractly model its core ideas as code logic, regardless of domain.
+</task>
+
+<step name="analyze-universal-concepts">
+1. Thoroughly analyze ${content} to identify:
+   - Key processes, formulas, or relationships (e.g., "supply/demand curves" for economics, "neural signal pathways" for anatomy).
+   - Sequences, hierarchies, or cause-effect chains (e.g., historical events, biological cycles).
+2. Flag abstract patterns that can be represented as functions, algorithms, or simulations.
+</step>
+
+<step name="map-to-code-structures">
+For ${count} identified concepts:
+- Translate workflows into:
+   • Functions (e.g., calculate_[metric], simulate_[process])
+   • Conditional logic (if/else for decision-based systems)
+   • Loops/iterations (for recurring patterns)
+   • Data structures (e.g., arrays for timelines, objects for entity properties)
+- Use domain-specific terms in variable/function names (e.g., platelet_count, inflation_rate).
+- Set ${difficulty}:
+   • Basic: Formula/equation translation
+   • Advanced: Multi-step simulations with error handling
+</step>
+
+<step name="craft-questions">
+Create questions with:
+1. Code snippets using [bracketed placeholders] for domain terms (e.g., "Write a function to calculate [metric] using [formula]").
+2. Instructions to complete/debug/explain the code.
+3. Plain text code formatting (no markdown).
+
+Examples:
+Question (Anatomy):
+def simulate_blood_flow(heart_rate, blood_pressure):
+    oxygen = (heart_rate * blood_pressure) / [constant]  # Replace [constant]
+    return oxygen
+
+Question (Stocks):
+function predictTrend(historicalData) {
+  let movingAverage = historicalData.reduce((a, b) => a + b) / [length];
+  return movingAverage > currentPrice ? "Bullish" : "Bearish";
+}
+</step>
+
+<step name="develop-answers">
+For each answer:
+1. Explicitly connect code logic to the domain (e.g., "This loop models the stages of [biological process]").
+2. Replace placeholders with actual terms from ${content} (e.g., [metric] → "GDP growth rate").
+3. For advanced: Add edge-case handling (e.g., "Validate that [parameter] cannot be negative").
+
+Examples:
+Answer (Anatomy):
+def simulate_blood_flow(heart_rate, blood_pressure):
+    oxygen = (heart_rate * blood_pressure) / 20  # Systemic vascular resistance ≈20
+    return oxygen
+
+Answer (Stocks):
+function predictTrend(historicalData) {
+  let movingAverage = historicalData.reduce((a, b) => a + b) / 30; // 30-day average
+  return movingAverage > currentPrice ? "Bullish" : "Bearish";
+}
+</step>
+</smithery:sequential-thinking>  
+
+- 'scenario-based':
+<smithery:sequential-thinking>
+<task>
+Create scenario-based quiz questions that test application of knowledge from the content.
+</task>
+
+<step name="extract-practical-scenarios">
+Analyze the full provided content thoroughly.
+What real-world scenarios or case studies are mentioned or implied?
+What principles or concepts could be applied in practical situations?
+</step>
+
+<step name="design-scenarios">
+Design ${count} distinct scenarios of ${difficulty} difficulty that require applying knowledge from the content.
+Each scenario should be realistic, specific, and require critical thinking.
+Ensure scenarios are diverse and cover different aspects of the content.
+</step>
+
+<step name="formulate-scenario-questions">
+For each scenario, craft a question that asks how to analyze, solve, or respond to the situation.
+Make questions clear but complex enough to require thoughtful application of knowledge.
+Ensure the questions are practical rather than purely theoretical.
+</step>
+
+<step name="develop-scenario-answers">
+Create comprehensive answers that walk through the proper approach to each scenario.
+Include rationale for decisions, alternative approaches, and potential outcomes.
+Connect the answers back to principles from the original content.
+</step>
+
+
+Verify all scenario questions and answers are practical and applicable.
+</smithery:sequential-thinking>
+
+- 'conceptual':
+<smithery:sequential-thinking>
+<task>
+Create conceptual quiz questions that test deep understanding of the content's theoretical foundations.
+</task>
+
+<step name="identify-core-concepts">
+Analyze the full provided content thoroughly.
+What are the fundamental concepts, theories, or mental models presented?
+What are the relationships between these concepts?
+</step>
+
+<step name="formulate-concept-areas">
+Identify ${count} distinct conceptual areas of ${difficulty} difficulty to explore through questions.
+For each area, determine what aspect of conceptual understanding to test (definition, application, analysis, comparison, etc.)
+Ensure conceptual areas are foundational and not just surface-level facts.
+</step>
+
+<step name="craft-conceptual-questions">
+For each area, craft a question that requires deep understanding of the concept.
+Questions should test comprehension beyond mere recall of information.
+Consider questions that explore relationships between concepts or theoretical implications.
+</step>
+
+<step name="develop-conceptual-answers">
+Create comprehensive answers that thoroughly explain each concept.
+Include definitions, theoretical frameworks, historical context if relevant, and practical implications.
+Where appropriate, address common misconceptions or alternative theoretical perspectives.
+</step>
+
+
+Ensure all questions truly test conceptual understanding rather than factual recall.
+
+</smithery:sequential-thinking>
+
+
+- 'mermaid-diagram':
+ <smithery:sequential-thinking>
+<task>
+Create quiz questions with Mermaid diagrams that visualize concepts from the content.
+</task>
+
+<step name="identify-diagram-opportunities">
+Analyze the full provided content thoroughly.
+What concepts, processes, structures, or relationships could be effectively visualized?
+What types of diagrams would be most appropriate (flowcharts, sequence diagrams, entity relationships, etc.)?
+</step>
+
+<step name="design-diagram-concepts">
+Design ${count} distinct diagram concepts of ${difficulty} difficulty.
+For each concept, determine what specific elements should be included in the diagram.
+Consider how to make the diagrams informative but not overly complex.
+</step>
+
+<step name="create-mermaid-diagrams">
+For each concept, create a valid Mermaid diagram syntax.
+Ensure diagrams follow proper Mermaid syntax rules and conventions.
+Test diagrams mentally to ensure they will render correctly.
+</step>
+
+<step name="craft-diagram-questions">
+Create questions that require understanding or analysis of each diagram.
+Questions should test comprehension of what the diagram represents and its implications.
+Make questions appropriately challenging given the ${difficulty} difficulty level.
+</step>
+
+<step name="develop-diagram-answers">
+Create comprehensive answers that explain the diagrams and address the questions.
+Include explanations of diagram components, relationships, and overall meaning.
+Connect the diagram back to the concepts from the original content.
+</step>
+
+</step>
+</smithery:sequential-thinking>
+
+- 'interview':
+<smithery:sequential-thinking>
+<task>
+Create interview questions based on the provided content that assess candidates effectively.
+</task>
+
+<step name="analyze-interview-content">
+Analyze the full provided content thoroughly.
+What skills, knowledge areas, and competencies are most relevant for interviews?
+What types of roles or positions would require this knowledge?
+</step>
+
+<step name="design-interview-question-types">
+Plan ${count} diverse interview questions of ${difficulty} difficulty covering:
+- Technical knowledge questions that test understanding of core concepts
+- Behavioral questions that assess past experiences with these concepts
+- Situational questions that test application in hypothetical scenarios
+- Problem-solving questions that assess analytical abilities
+</step>
+
+<step name="craft-interview-questions">
+For each question type, craft a clear, professional interview question.
+Ensure questions are open-ended enough to allow candidates to demonstrate depth of knowledge.
+Make questions challenging but fair for the ${difficulty} level.
+</step>
+
+<step name="develop-evaluation-criteria">
+For each question, develop criteria for what constitutes a strong answer.
+Include key points, examples, and reasoning that an ideal candidate would demonstrate.
+Note what would distinguish exceptional answers from merely adequate ones.
+</step>
+
+<step name="create-model-answers">
+Create comprehensive model answers that would meet all evaluation criteria.
+Include what interviewers should listen for and potential follow-up questions.
+Structure answers to show progression from basic to sophisticated understanding.
+</step>
+
+
+Ensure questions and answers are professional and appropriate for real interviews.
+</smithery:sequential-thinking>
+
+
 
 Format response as valid JSON array containing objects with:
 {
