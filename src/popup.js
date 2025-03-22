@@ -15,63 +15,18 @@ window.process = process;
 
 // Initialize mermaid with proper configuration
 mermaid.initialize({
-    startOnLoad: false,
+    startOnLoad: true,
+    theme: 'default',
     securityLevel: 'loose',
-    theme: 'base',
+    fontFamily: 'Arial, sans-serif',
     themeVariables: {
-        // Base colors from your grayscale palette
-        primary: '#000000',            // Black
-        secondary: '#262626',          // Dark Gray 1
-        tertiary: '#424242',           // Dark Gray 2
-
-        // Text and backgrounds
-        primaryTextColor: '#f4f4f4',   // Light text for dark backgrounds
-        secondaryTextColor: '#ffffff', // White text for dark backgrounds
-        tertiaryTextColor: '#e0e0e0',  // Light gray text
-
-        // Backgrounds and borders
-        background: '#f4f4f4',         // Light background
-        mainBkg: '#595959',            // Mid Gray for main elements
-        nodeBorder: '#262626',         // Dark borders
-
-        // Lines and connectors
-        lineColor: '#777777',          // Light Gray for lines
-
-        // Notes and highlights
-        noteBkgColor: '#595959',       // Mid Gray for notes
-        noteTextColor: '#ffffff',      // White text for notes
-        noteBorderColor: '#262626',    // Dark border for notes
-
-        // Specific chart elements
-        clusterBkg: '#424242',         // Dark Gray 2 for subgraphs
-        titleColor: '#000000',         // Black for titles
-
-        // State diagram colors
-        labelColor: '#ffffff',         // White for labels
-        altBackground: '#777777',      // Light Gray for alternate backgrounds
-
-        // Dark mode setting
-        darkMode: true,
-
-        // Class diagram colors
-        classText: '#ffffff',          // White text in class diagrams
-
-        // Edge labels
-        edgeLabelBackground: '#424242', // Dark Gray 2 for edge labels
-
-        // Actor colors for sequence diagrams
-        actorBkg: '#262626',            // Dark Gray 1 for actors
-        actorTextColor: '#ffffff',      // White text for actors
-
-        // Pie chart colors
-        pie1: '#000000',                // Black
-        pie2: '#262626',                // Dark Gray 1
-        pie3: '#424242',                // Dark Gray 2
-        pie4: '#595959',                // Mid Gray
-        pie5: '#777777',                // Light Gray
-        pieTitleTextColor: '#000000',   // Black for pie titles
-        pieSectionTextColor: '#ffffff', // White for section labels
-        pieStrokeColor: '#262626'       // Dark Gray 1 for borders
+        background: '#f4f4f4',
+        primaryColor: '#000000',
+        primaryTextColor: '#000000',
+        primaryBorderColor: '#7C0000',
+        lineColor: '#000000',
+        secondaryColor: '#262626',
+        tertiaryColor: '#424242'
     },
     flowchart: {
         useMaxWidth: true,
@@ -299,9 +254,22 @@ document.addEventListener('DOMContentLoaded', () => {
         quizContainer.innerHTML = questions.map((q, i) => {
             // Only include diagram section if diagram exists AND is valid
             const diagramSection = q.diagram ? `
-                <div class="diagram" style="display: none;"
-                     data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
-                <button class="toggle-diagram">Show Diagram</button>
+                <div class="diagram-section">
+                    <div class="diagram-container">
+                        <div class="diagram" style="display: none;"
+                             data-diagram-code="${q.diagram.replace(/"/g, '&quot;')}"></div>
+                        <div class="diagram-buttons">
+                            <button class="show-diagram" style="white-space: nowrap;
+  padding: 5px 10px;
+  margin-top: 8px;
+  cursor: pointer;"  >Show Diagram</button>
+                            <button class="copy-diagram" style="white-space: nowrap;
+  padding: 5px 10px;
+  margin-top: 8px;
+  cursor: pointer;"  >&#128203; Copy Code</button>
+                        </div>
+                    </div>
+                </div>
             ` : '';
 
             return `
@@ -320,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        // Apply syntax highlighting to any pre/code blocks that might be in the initial view
+        // Apply syntax highlighting to any pre/code blocks
         Prism.highlightAllUnder(quizContainer);
 
         // Add event listeners to options (for MCQ questions)
@@ -363,32 +331,74 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         // Toggle Diagram functionality with improved error handling
-        quizContainer.querySelectorAll('.toggle-diagram').forEach(button => {
-            button.addEventListener('click', function() {
-                const diagramDiv = this.parentElement.querySelector('.diagram');
-                if (diagramDiv.style.display === 'none') {
+        quizContainer.querySelectorAll('.show-diagram').forEach(button => {
+            button.addEventListener('click', function () {
+                const diagramDiv = this.parentElement.previousElementSibling;
+
+                if (diagramDiv.style.display === 'none' || diagramDiv.style.display === '') {
                     diagramDiv.style.display = 'block';
                     this.textContent = 'Hide Diagram';
 
-                    try {
-                        const diagramCode = diagramDiv.dataset.diagramCode;
-                        mermaid.render(`mermaid-${Date.now()}`, diagramCode)
-                            .then(({ svg }) => {
-                                diagramDiv.innerHTML = svg;
-                            })
-                            .catch(error => {
-                                // If diagram fails, hide the diagram section
-                                diagramDiv.style.display = 'none';
-                                this.style.display = 'none';
-                            });
-                    } catch (error) {
-                        // If diagram fails, hide the diagram section
-                        diagramDiv.style.display = 'none';
-                        this.style.display = 'none';
+                    // Get the diagram code and actually render it
+                    const diagramCode = diagramDiv.getAttribute('data-diagram-code');
+                    if (diagramCode) {
+                        try {
+                            // Clear previous content
+                            diagramDiv.innerHTML = '';
+
+                            // Create a unique ID for this diagram
+                            const diagramId = `mermaid-diagram-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+                            // Render using mermaid.render
+                            mermaid.render(diagramId, diagramCode)
+                                .then(result => {
+                                    diagramDiv.innerHTML = result.svg;
+                                })
+                                .catch(error => {
+                                    console.error('Mermaid render error:', error);
+                                    diagramDiv.innerHTML = `<div class="error">
+                                        <strong>Diagram Error:</strong> ${error.message}
+                                        <pre>${diagramCode}</pre>
+                                    </div>`;
+                                });
+                        } catch (error) {
+                            console.error('Mermaid render error:', error);
+                            diagramDiv.innerHTML = `<div class="error">
+                                <strong>Diagram Error:</strong> ${error.message}
+                                <pre>${diagramCode}</pre>
+                            </div>`;
+                        }
                     }
                 } else {
                     diagramDiv.style.display = 'none';
                     this.textContent = 'Show Diagram';
+                }
+            });
+        });
+
+        // Now add the event listeners after appending to DOM
+        quizContainer.querySelectorAll('.copy-diagram').forEach(button => {
+            button.addEventListener('click', function () {
+                const diagramDiv = this.parentElement.previousElementSibling;
+                const diagramCode = diagramDiv.getAttribute('data-diagram-code');
+
+                if (diagramCode) {
+                    // Create a temporary textarea to copy the code
+                    const textarea = document.createElement('textarea');
+                    textarea.value = diagramCode;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+
+                    // Change button text temporarily to show success
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '&#9989; Copied!';
+
+                    // Revert button text after 2 seconds
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
                 }
             });
         });
@@ -612,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginBtn').addEventListener('click', login);
 
     // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+    document.getElementById('logoutBtn').addEventListener('click', function (e) {
         // Prevent any default behavior
         e.preventDefault();
         // Set a 3-second timeout before calling the actual logout function
@@ -781,8 +791,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>How was your Quiz Scraper experience?</p>
                 <div class="stars">
                     ${Array(5).fill('&#9733;').map((star, i) =>
-                        `<span class="star" data-rating="${i + 1}">${star}</span>`
-                    ).join('')}
+            `<span class="star" data-rating="${i + 1}">${star}</span>`
+        ).join('')}
                 </div>
                 <div class="rating-buttons">
                     <button id="submit-rating" class="btn" disabled>Submit</button>
@@ -901,7 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newLoginBtn.addEventListener('click', login);
     }
 
-   async function login() {
+    async function login() {
             const loginScreen = document.getElementById('login-screen');
 
         // Show loading animation
@@ -927,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Original login code continues here
-        chrome.identity.getAuthToken({ interactive: true }, async function(token) {
+        chrome.identity.getAuthToken({ interactive: true }, async function (token) {
             try {
                 if (chrome.runtime.lastError) {
                     throw new Error(chrome.runtime.lastError.message);
@@ -1074,21 +1084,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Wait for the animation to complete before showing login screen
             setTimeout(() => {
-              // Prepare the login screen but keep it without shadows initially
-              loginScreen.classList.add('no-shadow');
-              loginScreen.style.display = 'flex';
-              loginScreen.classList.add('fade-in');
+                // Prepare the login screen but keep it without shadows initially
+                loginScreen.classList.add('no-shadow');
+                loginScreen.style.display = 'flex';
+                loginScreen.classList.add('fade-in');
 
-              // Complete the logout process
-              completeLogout(true);
+                // Complete the logout process
+                completeLogout(true);
 
-              // After the login screen appears, restore its shadows with a delay
-              setTimeout(() => {
-                const loginContainer = document.querySelector('#login-screen .login-container');
-                if (loginContainer) {
-                  loginContainer.classList.remove('no-shadow');
-                }
-              }, 100);
+                // After the login screen appears, restore its shadows with a delay
+                setTimeout(() => {
+                    const loginContainer = document.querySelector('#login-screen .login-container');
+                    if (loginContainer) {
+                        loginContainer.classList.remove('no-shadow');
+                    }
+                }, 100);
             }, 800); // Matches the animation duration
         });
     }
@@ -1147,104 +1157,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...options.headers,
                 'Authorization': `Bearer ${jwt}`
             }
-        });
-    }
-
-    // Listen for extension icon clicks
-    chrome.action.onClicked.addListener((tab) => {
-        chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
-    });
-
-    // Add this to your DOMContentLoaded event listener
-    document.getElementById('toggle-sidebar').addEventListener('click', () => {
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, { action: "toggleSidebar" });
-        });
-    });
-
-    // Add this function
-    function switchToSidebar() {
-        chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
-            // First inject our sidebar
-            await chrome.tabs.sendMessage(tabs[0].id, { action: "injectSidebar" });
-            // Then close the popup
-            window.close();
-        });
-    }
-
-    // Check if we're in sidebar mode
-    const urlParams = new URLSearchParams(window.location.search);
-    const isSidebar = urlParams.get('sidebar') === 'true';
-
-    if (isSidebar) {
-        document.body.classList.add('sidebar-mode');
-        // Hide the "Switch to Sidebar" button in sidebar mode
-        const switchButton = document.querySelector('.switch-to-sidebar');
-        if (switchButton) {
-            switchButton.style.display = 'none';
-        }
-    }
-
-    // Add switch to sidebar button (only in popup mode)
-    if (!isSidebar) {
-        // Remove or comment out this section
-        /*
-        const header = document.querySelector('.header .controls');
-        const switchButton = document.createElement('button');
-        switchButton.className = 'btn switch-to-sidebar';
-        switchButton.innerHTML = '&#8689;';
-        switchButton.title = 'Switch to Sidebar Mode';
-        header.prepend(switchButton);
-        */
-
-        switchButton.addEventListener('click', switchToSidebar);
-    }
-
-    // Remove the logout button completely
-            const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn && logoutBtn.parentNode) {
-        logoutBtn.parentNode.removeChild(logoutBtn);
-    }
-
-    // Also remove any parent elements that were specific to the logout button
-    const backgroundElement = document.querySelector('.background.background--light');
-    if (backgroundElement && backgroundElement.parentNode) {
-        backgroundElement.parentNode.removeChild(backgroundElement);
-    }
-
-    // Remove the timer elements if any exist
-    const timerElements = document.querySelectorAll('.logout-timer');
-    timerElements.forEach(element => {
-        if (element.parentNode) {
-            element.parentNode.removeChild(element);
-        }
-    });
-
-    // Clean up any related styles
-    const styleElement = document.querySelector('style[data-for="logout-animation"]');
-    if (styleElement) {
-        styleElement.parentNode.removeChild(styleElement);
-    }
-
-
-    // Add collapsed class to the wrapper
-    configWrapper.classList.add('collapsed');
-
-    // Add collapsed class to the toggle button
-    if (toggleConfigBtn) {
-        toggleConfigBtn.classList.add('collapsed');
-    }
-
-    // Store the collapsed state in localStorage
-    localStorage.setItem('configCollapsed', 'true');
-
-    // Add event listener for the signup button
-    const signupBtn = document.getElementById('signupBtn');
-    if (signupBtn) {
-        signupBtn.addEventListener('click', () => {
-            // For now, just trigger the same login function
-            // You can modify this to handle signup differently if needed
-            login();
         });
     }
 });

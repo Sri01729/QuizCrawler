@@ -2102,3 +2102,59 @@ code[class*="language-"] {
     }
 }
 
+.diagram-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.copy-diagram {
+  background-color: #424242;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius:var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.copy-diagram:hover {
+  background-color: #262626;
+}
+
+/* Fix the foggy appearance on diagram containers */
+.diagram-container { /* Light background */
+  border-radius: 6px;
+  margin-top: 10px;
+  width: 100%;
+  /* Remove any potential fog-causing properties */
+  filter: none !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none; /* Remove shadows that might cause foggy appearance */
+}
+
+/* Make sure SVG elements inside are fully opaque */
+.diagram-container svg,
+.diagram-container svg * {
+  opacity: 1 !important;
+  fill-opacity: 1 !important;
+  stroke-opacity: 1 !important;
+}
+
+/* Ensure text in diagrams is readable */
+.diagram-container text {
+  fill: #000000 !important;
+  font-weight: normal;
+}
+
+/* Make diagram background clean */
+.diagram-container rect.background {
+  fill: #f4f4f4 !important;
+  fill-opacity: 1 !important;
+}
+

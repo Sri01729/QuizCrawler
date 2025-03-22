@@ -151,7 +151,7 @@ function predictTrend(historicalData) {
   return movingAverage > currentPrice ? "Bullish" : "Bearish";
 }
 </step>
-</smithery:sequential-thinking>  
+</smithery:sequential-thinking>
 
 - 'scenario-based':
 <smithery:sequential-thinking>
@@ -224,43 +224,60 @@ Ensure all questions truly test conceptual understanding rather than factual rec
 
 
 - 'mermaid-diagram':
- <smithery:sequential-thinking>
+<smithery:sequential-thinking>
 <task>
-Create quiz questions with Mermaid diagrams that visualize concepts from the content.
+For the provided ${content}, create **one quiz question per diagram type** from the predefined list below. Each question must use a distinct diagram type, even if abstractly applied.
 </task>
 
-<step name="identify-diagram-opportunities">
-Analyze the full provided content thoroughly.
-What concepts, processes, structures, or relationships could be effectively visualized?
-What types of diagrams would be most appropriate (flowcharts, sequence diagrams, entity relationships, etc.)?
+<step name="map-all-diagram-types">
+1. Mandatory diagram types to cover (one question each):
+   - Flowchart, Sequence, Class, State, Entity Relationship, User Journey, Gantt, Pie Chart, Quadrant Chart, Requirement, Gitgraph, C4, Mindmaps, Timeline, ZenUML, Sankey, XY Chart, Block, Packet, Kanban, Architecture
+2. For each diagram type:
+   - Force a relevant application to ${content}, even if abstract.
+   - Example: Use a "Gitgraph" for historical content by treating events as commits.
 </step>
 
-<step name="design-diagram-concepts">
-Design ${count} distinct diagram concepts of ${difficulty} difficulty.
-For each concept, determine what specific elements should be included in the diagram.
-Consider how to make the diagrams informative but not overly complex.
+<step name="design-per-type-concepts">
+For each diagram type:
+1. Identify how to model ${content} using the diagram’s structure:
+   - Flowchart → Break into steps/decisions.
+   - Class → Hierarchical taxonomy.
+   - Sankey → Resource flow.
+   - ... (apply to all types).
+2. Set complexity to ${difficulty}:
+   - Basic: 3-4 nodes/relationships.
+   - Advanced: Multi-layered logic.
 </step>
 
-<step name="create-mermaid-diagrams">
-For each concept, create a valid Mermaid diagram syntax.
-Ensure diagrams follow proper Mermaid syntax rules and conventions.
-Test diagrams mentally to ensure they will render correctly.
+<step name="create-all-diagrams">
+For each diagram type:
+1. Write valid Mermaid syntax.
+2. Include placeholders if needed (e.g., "Add [node] for [concept]").
+3. Example (Gitgraph for historical content):
+gitGraph
+    commit id: "1776" tag: "Declaration of Independence"
+    commit id: "1787" tag: "Constitution Ratified"
+    branch slavery_debate
+    commit id: "1861" tag: "Civil War Begins"
 </step>
 
-<step name="craft-diagram-questions">
-Create questions that require understanding or analysis of each diagram.
-Questions should test comprehension of what the diagram represents and its implications.
-Make questions appropriately challenging given the ${difficulty} difficulty level.
+<step name="craft-per-type-questions">
+For each diagram type:
+1. Ask to interpret, complete, or correct the diagram.
+2. Examples:
+   - Flowchart: "Add a decision node for [medical diagnosis step]."
+   - Sankey: "Identify where 20% of [resource] is wasted."
+   - Class: "Extend this taxonomy with a [subclass]."
 </step>
 
-<step name="develop-diagram-answers">
-Create comprehensive answers that explain the diagrams and address the questions.
-Include explanations of diagram components, relationships, and overall meaning.
-Connect the diagram back to the concepts from the original content.
+<step name="develop-per-type-answers">
+For each diagram type:
+1. Provide the corrected/completed diagram.
+2. Explain how the diagram type suits the content:
+   - "The XY Chart plots [variable A] vs [variable B] from the content."
+   - "The Kanban diagram stages align with [process phases]."
 </step>
-
-</step>
-</smithery:sequential-thinking>
+</smithery:sequential-thinking>  
 
 - 'interview':
 <smithery:sequential-thinking>
