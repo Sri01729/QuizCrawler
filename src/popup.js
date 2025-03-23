@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const payload = {
                 content: response.content.substring(0, 12000),
                 difficulty: document.getElementById('difficulty').value,
-                category: document.getElementById('category').value,
+                category: getSelectedCategories(),
                 count: document.getElementById('count').value
             };
 
@@ -1158,5 +1158,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Authorization': `Bearer ${jwt}`
             }
         });
+    }
+
+    function getSelectedCategories() {
+        const categorySelect = document.getElementById('category');
+        const selectedOptions = Array.from(categorySelect.selectedOptions);
+        // Return values with lowercase and spaces replaced by hyphens
+        return selectedOptions.map(option => (option.value || option.text).toLowerCase().replace(' ', '-'));
     }
 });
