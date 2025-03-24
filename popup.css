@@ -2158,20 +2158,3 @@ code[class*="language-"] {
   fill-opacity: 1 !important;
 }
 
-select[multiple] {
-    height: auto;
-    min-height: 100px;
-    padding: 8px;
-}
-
-select[multiple] option {
-    padding: 5px;
-    margin-bottom: 2px;
-    border-radius: 3px;
-}
-
-select[multiple] option:checked {
-    background-color: #3a87ad;
-    color: white;
-}
-

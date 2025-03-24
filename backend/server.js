@@ -31,34 +31,22 @@ const authenticateToken = (req, res, next) => {
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Add this function at the top of your generate-quiz endpoint
-function getCategoryType(category) {
-    if (!category) return 'general';
-    if (typeof category === 'string') return category.toLowerCase().replace(' ', '-');
-    // If it's an array, use the first item
-    if (Array.isArray(category) && category.length > 0) {
-        return typeof category[0] === 'string' ? category[0].toLowerCase().replace(' ', '-') : 'general';
-    }
-    return 'general';
-}
-
 app.post('/api/generate-quiz', authenticateToken, async (req, res) => {
     try {
         const { content, difficulty, category, count } = req.body;
 
-        // Log the request with multiple categories
         console.log('Received quiz generation request:', {
             difficulty,
-            categories: Array.isArray(category) ? category : [category], // Handle both array and string
+            category,
             count,
             contentLength: content?.length
         });
 
-        // For backward compatibility, convert single category to array if needed
-        const categories = Array.isArray(category) ? category : [category];
+        if (!content) {
+            throw new Error('No content provided');
+        }
 
-        // Modify your prompt to handle multiple categories
-        const prompt = `Generate ${count} ${difficulty} level questions across these categories: ${categories.join(', ')} based on: ${content}
+        const prompt = `Generate ${count} ${difficulty} level questions in the "${category}" category based on: ${content}
 
 For each question, follow these category-specific requirements:
 - "General": Open-ended questions about common practices
@@ -251,7 +239,7 @@ For the provided ${content}, create **one quiz question per diagram type** from 
 
 <step name="design-per-type-concepts">
 For each diagram type:
-1. Identify how to model ${content} using the diagram's structure:
+1. Identify how to model ${content} using the diagram’s structure:
    - Flowchart → Break into steps/decisions.
    - Class → Hierarchical taxonomy.
    - Sankey → Resource flow.
@@ -289,7 +277,7 @@ For each diagram type:
    - "The XY Chart plots [variable A] vs [variable B] from the content."
    - "The Kanban diagram stages align with [process phases]."
 </step>
-</smithery:sequential-thinking>
+</smithery:sequential-thinking>  
 
 - 'interview':
 <smithery:sequential-thinking>
@@ -337,7 +325,7 @@ Ensure questions and answers are professional and appropriate for real interview
 
 Format response as valid JSON array containing objects with:
 {
-  "type": "${getCategoryType(category)}",  // Using the helper function
+  "type": "${category.toLowerCase().replace(' ', '-')}",  // Auto-generated from category
   "question": "Category-appropriate question text",
   "options": ["..."] // Required for Scenario-Based, optional otherwise,
   "answer": "Detailed solution",
