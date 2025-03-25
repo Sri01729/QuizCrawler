@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Re-enable the button
                 generateBtn.disabled = false;
-                generateBtn.textContent = "Quizify This Page";
+                generateBtn.textContent = "Generate Quiz";
                 generateBtn.style.opacity = "1";
                 return;
             }
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Re-enable the button after questions are displayed
             generateBtn.disabled = false;
-            generateBtn.textContent = "Quizify This Page";
+            generateBtn.textContent = "Generate Quiz";
             generateBtn.style.opacity = "1";
 
         } catch (error) {
@@ -555,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Re-enable the button on error
             const generateBtn = document.getElementById('generate-btn');
             generateBtn.disabled = false;
-            generateBtn.textContent = "Quizify This Page";
+            generateBtn.textContent = "Generate Quiz";
             generateBtn.style.opacity = "1";
         }
     });
@@ -570,7 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const successMessage = document.createElement('div');
         successMessage.className = 'success';
         successMessage.textContent = 'Quiz saved successfully!';
-        quizContainer.appendChild(successMessage);
+        quizContainer.insertAdjacentElement('afterbegin', successMessage);
+        successMessage.scrollIntoView({ behavior: 'smooth' });
         setTimeout(() => {
             successMessage.remove();
         }, 3000);
@@ -581,6 +582,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         chrome.downloads.download({ url, filename: `quiz_${Date.now()}.json` });
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success';
+        successMessage.textContent = 'Quiz exported successfully!';
+        quizContainer.insertAdjacentElement('afterbegin', successMessage);
+        successMessage.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            successMessage.remove();
+        }, 3000);
     });
 
     // Copy to clipboard functionality
@@ -597,7 +606,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const successMessage = document.createElement('div');
         successMessage.className = 'success';
         successMessage.textContent = 'Questions and answers copied to clipboard!';
-        quizContainer.appendChild(successMessage);
+        quizContainer.insertAdjacentElement('afterbegin', successMessage);
+        successMessage.scrollIntoView({ behavior: 'smooth' });
         setTimeout(() => {
             successMessage.remove();
         }, 3000);

@@ -213,7 +213,7 @@ select {
   border-radius: var(--border-radius);
   border: 1px solid #e2e8f0;
   background-color: white;
-  color: var(--text);
+  color: var(--black);
   font-size: 15px;
   transition: border-color 0.2s, box-shadow 0.2s;
   cursor: pointer;
@@ -230,6 +230,18 @@ select:focus {
   outline: none;
   border-color: var(--primary-light);
   box-shadow: 0 0 0 3px rgba(91, 123, 158, 0.1);
+}
+
+select option:hover,
+select option:checked {
+  box-shadow: 0 0 10px 100px var(--black) inset;
+  color: white;
+}
+
+select option {
+  background-color: white;
+  color: var(--black);
+  padding: 8px;
 }
 
 button {
@@ -513,8 +525,24 @@ button:active {
   padding: 10px;
   background-color: rgba(82, 183, 136, 0.1);
   border: 1px solid var(--success);
-  margin-top: 10px;
   border-radius: var(--border-radius);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-bottom: 20px;
+  text-align: center;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Loading Animation */
