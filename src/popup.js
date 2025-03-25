@@ -475,6 +475,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the Generate Quiz button event listener
     document.getElementById('generate-btn').addEventListener('click', async () => {
         try {
+            // Close settings dropdown
+            const configWrapper = document.querySelector('.config-wrapper');
+            const toggleConfigBtn = document.getElementById('toggle-config');
+            configWrapper.classList.add('collapsed');
+            toggleConfigBtn.classList.add('collapsed');
+
             // Get the button element
             const generateBtn = document.getElementById('generate-btn');
 
