@@ -49,14 +49,7 @@ app.post('/api/generate-quiz', authenticateToken, async (req, res) => {
         const prompt = `Generate ${count} ${difficulty} level questions in the "${category}" category based on: ${content}
 
 For each question, follow these category-specific requirements:
-- "General": Open-ended questions about common practices
-- "Programming": Include code snippets/implementation questions
-- "Scenario-Based": Situational questions with multiple-choice options
-- "Conceptual": Theory/principle explanation questions
-- "Mermaid Diagram": Questions requiring flow/architecture diagrams
-- "Interview": Interview questions
 
-personalities regarding category:
 - 'general':
 <smithery:sequential-thinking>
 <task>
@@ -88,69 +81,79 @@ Ensure answers are accurate and align precisely with the questions.
 
 </smithery:sequential-thinking>
 
-- 'programming':
+'programming':
 <smithery:sequential-thinking>
 <task>
-Convert ${content} into programming-style questions/snippets that abstractly model its core ideas as code logic, regardless of domain.
+Convert ${content} exclusively into programming-style code snippet questions that model its core ideas as executable logic. Avoid all general/theoretical/conceptual questions.
 </task>
 
-<step name="analyze-universal-concepts">
-1. Thoroughly analyze ${content} to identify:
-   - Key processes, formulas, or relationships (e.g., "supply/demand curves" for economics, "neural signal pathways" for anatomy).
-   - Sequences, hierarchies, or cause-effect chains (e.g., historical events, biological cycles).
-2. Flag abstract patterns that can be represented as functions, algorithms, or simulations.
+<step name="extract-code-worthy-concepts">
+1. Scan ${content} strictly for:
+   - Quantifiable relationships (equations, formulas, rates)
+   - Procedural workflows (step-by-step processes)
+   - State-dependent behaviors (if-then scenarios)
+   - Transformations (input → output mappings)
+2. Reject any purely descriptive or conceptual content
 </step>
 
-<step name="map-to-code-structures">
-For ${count} identified concepts:
-- Translate workflows into:
-   • Functions (e.g., calculate_[metric], simulate_[process])
-   • Conditional logic (if/else for decision-based systems)
-   • Loops/iterations (for recurring patterns)
-   • Data structures (e.g., arrays for timelines, objects for entity properties)
-- Use domain-specific terms in variable/function names (e.g., platelet_count, inflation_rate).
-- Set ${difficulty}:
-   • Basic: Formula/equation translation
-   • Advanced: Multi-step simulations with error handling
+<step name="force-code-representation">
+For each concept, mandate one of:
+- Function implementation (required parameters, return value)
+- Algorithm completion (missing logic segments)
+- Bug fixing (intentional errors in provided code)
+- Simulation modeling (time-step based systems)
+- Data structure application (appropriate container types)
+
+Template formats:
+1. "Complete this function that calculates [metric]:"
+2. "Fix the errors in this [process] simulation:"
+3. "Implement the missing [step] in this algorithm:"
 </step>
 
-<step name="craft-questions">
-Create questions with:
-1. Code snippets using [bracketed placeholders] for domain terms (e.g., "Write a function to calculate [metric] using [formula]").
-2. Instructions to complete/debug/explain the code.
-3. Plain text code formatting (no markdown).
+<step name="generate-snippet-questions">
+Output questions with:
+1. Executable but incomplete code (always with placeholders)
+2. Clear programming task (never "explain" or "describe")
+3. Constraints (time/space complexity where applicable)
+
+Required elements:
+- Code block with 2-5 lines requiring modification
+- 1-2 sentence instruction specifying the coding task
+- Variable names derived from ${content} terminology
 
 Examples:
-Question (Anatomy):
-def simulate_blood_flow(heart_rate, blood_pressure):
-    oxygen = (heart_rate * blood_pressure) / [constant]  # Replace [constant]
-    return oxygen
-
-Question (Stocks):
-function predictTrend(historicalData) {
-  let movingAverage = historicalData.reduce((a, b) => a + b) / [length];
-  return movingAverage > currentPrice ? "Bullish" : "Bearish";
+// Physics:
+function calculateTrajectory(angle, velocity) {
+  let g = 9.81;
+  return ([placeholder] * Math.sin(2*angle)) / g; // Complete the formula
 }
+
+// Biology:
+def cell_division(cell_count, generations):
+    for _ in range(generations):
+        cell_count *= [placeholder]  # Fix growth rate
+    return cell_count
 </step>
 
-<step name="develop-answers">
-For each answer:
-1. Explicitly connect code logic to the domain (e.g., "This loop models the stages of [biological process]").
-2. Replace placeholders with actual terms from ${content} (e.g., [metric] → "GDP growth rate").
-3. For advanced: Add edge-case handling (e.g., "Validate that [parameter] cannot be negative").
-
-Examples:
-Answer (Anatomy):
-def simulate_blood_flow(heart_rate, blood_pressure):
-    oxygen = (heart_rate * blood_pressure) / 20  # Systemic vascular resistance ≈20
-    return oxygen
-
-Answer (Stocks):
-function predictTrend(historicalData) {
-  let movingAverage = historicalData.reduce((a, b) => a + b) / 30; // 30-day average
-  return movingAverage > currentPrice ? "Bullish" : "Bearish";
-}
+<step name="validate-code-centric">
+For each generated question:
+1. Verify it cannot be answered without writing/modifying code
+2. Ensure no theoretical knowledge is required beyond:
+   - Basic programming syntax
+   - Given variable definitions
+3. Confirm placeholders correspond to concrete:
+   - Mathematical operations
+   - Parameter values
+   - Conditional checks
+   - Loop boundaries
 </step>
+
+<constraints>
+- Never ask "what is" or "why does" questions
+- Never require domain knowledge beyond code comments
+- Always provide runnable (but incomplete) starter code
+- Maximum 1 sentence of non-code context per question
+</constraints>
 </smithery:sequential-thinking>
 
 - 'scenario-based':
@@ -231,7 +234,7 @@ For the provided ${content}, create **one quiz question per diagram type** from 
 
 <step name="map-all-diagram-types">
 1. Mandatory diagram types to cover (one question each):
-   - Flowchart, Sequence, Class, State, Entity Relationship, User Journey, Gantt, Pie Chart, Quadrant Chart, Requirement, Gitgraph, C4, Mindmaps, Timeline, ZenUML, Sankey, XY Chart, Block, Packet, Kanban, Architecture
+   - Flowchart, Sequence, Class, State, Entity Relationship, User Journey, Gantt, Pie Chart, Quadrant Chart, Requirement, Gitgraph, Mindmaps, Timeline, ZenUML, Sankey, XY Chart, Block, Packet, Kanban, Architecture
 2. For each diagram type:
    - Force a relevant application to ${content}, even if abstract.
    - Example: Use a "Gitgraph" for historical content by treating events as commits.
@@ -277,7 +280,7 @@ For each diagram type:
    - "The XY Chart plots [variable A] vs [variable B] from the content."
    - "The Kanban diagram stages align with [process phases]."
 </step>
-</smithery:sequential-thinking>  
+</smithery:sequential-thinking>
 
 - 'interview':
 <smithery:sequential-thinking>

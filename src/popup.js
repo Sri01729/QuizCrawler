@@ -129,6 +129,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const configWrapper = document.querySelector('.config-wrapper');
     // const maximizeBtn = document.getElementById('maximize-btn');
 
+    // Clear quiz and storage when extension opens
+    chrome.storage.local.remove('lastQuiz');
+    questions = [];
+    quizContainer.innerHTML = createWelcomeMessage();
+
+    // Add click handler for the Generate Quiz button
+    const ctaButton = quizContainer.querySelector('.cta-button');
+    if (ctaButton) {
+        ctaButton.addEventListener('click', () => {
+            document.getElementById('generate-btn').click();
+        });
+    }
+
     // Check if opened in maximized mode
     if (window.location.hash === '#maximized') {
         const savedState = localStorage.getItem('quizState');
